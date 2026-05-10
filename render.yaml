@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: benyjoe-ia
+    env: python
+    region: frankfurt
+    plan: free
+    buildCommand: pip install -r backend/requirements.txt
+    startCommand: gunicorn backend.app:app --bind 0.0.0.0:$PORT --workers 2 --timeout 600
+    envVars:
+      - key: BENYJOE_SECRET
+        generateValue: true
+      - key: FLASK_ENV
+        value: production
+      - key: OUTPUTS_DIR
+        value: /tmp/outputs
