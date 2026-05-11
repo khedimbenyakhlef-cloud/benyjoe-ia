@@ -275,16 +275,14 @@ def api_videos():
         return jsonify({'videos': state['videos']})
 
 
-@app.route('/api/status', methods=['GET'])
-def api_status():
-    """Statut global de la plateforme (frontend polling toutes les 10s)."""
+def _get_kaggle_status():
+    """Vérifie si Kaggle est vivant — appelé par tous les endpoints de statut."""
     with state_lock:
         kaggle_url    = state.get('kaggle_url')
         kaggle_device = state.get('kaggle_device')
         kaggle_seen   = state.get('kaggle_seen')
         nb_videos     = len(state['videos'])
 
-    # Vérifier si Kaggle est vraiment vivant
     kaggle_alive = False
     if kaggle_url:
         try:
@@ -297,15 +295,44 @@ def api_status():
             with state_lock:
                 state['kaggle_url'] = None
 
-    return jsonify({
-        'platform':      PLATFORM_NAME,
-        'founder':       'KHEDIM BENYAKHLEF dit BENY-JOE',
+    return {
+        'platform':         PLATFORM_NAME,
+        'founder':          'KHEDIM BENYAKHLEF dit BENY-JOE',
         'kaggle_connected': kaggle_alive,
-        'kaggle_device': kaggle_device,
-        'kaggle_seen':   kaggle_seen,
-        'videos_ready':  nb_videos,
-        'timestamp':     datetime.now(timezone.utc).isoformat(),
-    })
+        'connected':        kaggle_alive,
+        'kaggle_url':       kaggle_url if kaggle_alive else None,
+        'kaggle_device':    kaggle_device,
+        'device':           kaggle_device,
+        'kaggle_seen':      kaggle_seen,
+        'videos_ready':     nb_videos,
+        'timestamp':        datetime.now(timezone.utc).isoformat(),
+    }
+
+
+@app.route('/api/status', methods=['GET'])
+def api_status():
+    """Statut global — nouveau frontend."""
+    return jsonify(_get_kaggle_status())
+
+
+@app.route('/api/connexion', methods=['GET'])
+def api_connexion():
+    """Alias — ancien frontend (index.html original)."""
+    return jsonify(_get_kaggle_status())
+
+
+@app.route('/api/ping', methods=['GET'])
+def api_ping():
+    """Ping simple."""
+    return jsonify(_get_kaggle_status())
+
+
+@app.route('/api/tunnel', methods=['GET'])
+def api_tunnel():
+    """Retourne l'URL du tunnel ngrok actif."""
+    with state_lock:
+        url = state.get('kaggle_url')
+    return jsonify({'tunnel_url': url, 'active': url is not None})
 
 
 # ════════════════════════════════════════════════════════════════════════
