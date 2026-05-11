@@ -1,253 +1,341 @@
 """
-╔══════════════════════════════════════════════════════════╗
-║  BENY-JOE IA — Backend Flask                           ║
-║  Fondé par KHEDIM BENYAKHLEF dit BENY-JOE              ║
-║  Déployé sur Render                                     ║
-╚══════════════════════════════════════════════════════════╝
+╔══════════════════════════════════════════════════════════════════════╗
+║  BENY-JOE IA — Serveur Render (app.py)                             ║
+║  Fondé par KHEDIM BENYAKHLEF dit BENY-JOE                          ║
+║                                                                      ║
+║  Déploiement : Render Web Service                                   ║
+║  Variables d'environnement requises :                               ║
+║    BENYJOE_SECRET  → clé secrète partagée avec le notebook Kaggle  ║
+║    PORT            → fourni automatiquement par Render              ║
+╚══════════════════════════════════════════════════════════════════════╝
+
+Ce fichier est le SERVEUR RENDER — il reçoit :
+  1. L'URL ngrok du notebook Kaggle  (/api/kaggle-url)
+  2. La notification quand une vidéo est prête (/api/video-ready)
+  3. Les requêtes de génération du frontend (/api/generate)
+  4. Le polling de statut des jobs (/api/jobs/<jid>)
+
+Et il sert :
+  - Le frontend HTML/JS (pages vidéo, image, animation)
+  - Les fichiers statiques
 """
 
 import os
 import uuid
-import json
 import time
+import logging
 import threading
+import requests
 from datetime import datetime, timezone
-from flask import Flask, request, jsonify, send_from_directory, abort, Response
+from flask import Flask, request, jsonify, send_from_directory, abort, redirect
 from flask_cors import CORS
 
-# ── Config ────────────────────────────────────────────────────────────
-OUTPUTS_DIR   = os.environ.get("OUTPUTS_DIR", os.path.join(os.path.dirname(__file__), "..", "outputs"))
-SECRET_KEY    = os.environ.get("BENYJOE_SECRET", "benyjoe-secret-2025")
-PORT          = int(os.environ.get("PORT", 10000))
-
-os.makedirs(OUTPUTS_DIR, exist_ok=True)
-
-app = Flask(__name__, static_folder="../frontend/public", static_url_path="")
+# ── Configuration ──────────────────────────────────────────────────────
+app = Flask(__name__, static_folder='static', template_folder='templates')
 CORS(app)
 
-# ── In-memory store ───────────────────────────────────────────────────
-jobs    = {}
-lock    = threading.Lock()
-kaggle_url = {"url": None, "updated_at": None}
+logging.basicConfig(level=logging.INFO)
+log = logging.getLogger('BENYJOE-RENDER')
 
-# ════════════════════════════════════════════════════════════════════
-#  UTILS
-# ════════════════════════════════════════════════════════════════════
+PORT          = int(os.environ.get('PORT', 10000))
+SECRET_KEY    = os.environ.get('BENYJOE_SECRET', 'benyjoe-secret-2025')
+PLATFORM_NAME = 'BENY-JOE IA'
 
-def new_job(prompt, job_type="video", params=None):
-    jid = str(uuid.uuid4())[:12]
-    with lock:
-        jobs[jid] = {
-            "id":          jid,
-            "type":        job_type,
-            "prompt":      prompt,
-            "status":      "pending",
-            "progress":    0,
-            "step":        "En attente du moteur Kaggle TPU…",
-            "result":      None,
-            "error":       None,
-            "created_at":  datetime.now(timezone.utc).isoformat(),
-            "params":      params or {},
-        }
-    return jid
+# ── État partagé (en mémoire) ──────────────────────────────────────────
+state = {
+    'kaggle_url':    None,   # URL ngrok du notebook Kaggle actif
+    'kaggle_device': None,
+    'kaggle_seen':   None,   # datetime dernière connexion Kaggle
+    'videos':        [],     # liste des vidéos prêtes (url + job_id)
+}
+state_lock = threading.Lock()
+
+# Jobs locaux (proxy du statut Kaggle)
+jobs_cache = {}
+jobs_lock  = threading.Lock()
 
 
-def update_job(jid, **kwargs):
-    with lock:
-        if jid in jobs:
-            jobs[jid].update(kwargs)
+# ════════════════════════════════════════════════════════════════════════
+#  UTILITAIRES
+# ════════════════════════════════════════════════════════════════════════
+
+def check_secret(data):
+    """Vérifie que la clé secrète est correcte."""
+    return data.get('secret') == SECRET_KEY
 
 
-def forward_to_kaggle(jid, payload):
-    import requests as req
-    base = kaggle_url.get("url")
+def forward_to_kaggle(path, method='POST', json_data=None, timeout=60):
+    """Transmet une requête au notebook Kaggle via ngrok."""
+    with state_lock:
+        base = state.get('kaggle_url')
     if not base:
-        update_job(jid, status="error",
-                   error="Moteur Kaggle non connecté. Lancez le notebook Kaggle.")
-        return
+        return None, 'Notebook Kaggle non connecté'
+    url = f"{base.rstrip('/')}/{path.lstrip('/')}"
     try:
-        r = req.post(f"{base}/generate", json=payload, timeout=600)
-        if r.status_code == 200:
-            data = r.json()
-            update_job(jid,
-                       status="done",
-                       progress=100,
-                       step="Terminé !",
-                       result=data.get("video_url") or data.get("image_url"),
-                       )
+        if method == 'POST':
+            r = requests.post(url, json=json_data, timeout=timeout)
         else:
-            update_job(jid, status="error",
-                       error=f"Kaggle erreur {r.status_code}: {r.text[:200]}")
+            r = requests.get(url, timeout=timeout)
+        return r, None
+    except requests.exceptions.ConnectionError:
+        with state_lock:
+            state['kaggle_url'] = None  # Tunnel mort → reset
+        return None, 'Tunnel ngrok expiré — relancez le notebook Kaggle'
     except Exception as e:
-        update_job(jid, status="error", error=str(e))
+        return None, str(e)
 
 
-# ════════════════════════════════════════════════════════════════════
-#  ROUTES API
-# ════════════════════════════════════════════════════════════════════
+# ════════════════════════════════════════════════════════════════════════
+#  ENDPOINTS REÇUS DU NOTEBOOK KAGGLE
+# ════════════════════════════════════════════════════════════════════════
 
-@app.route("/api/health", methods=["GET"])
-def health():
+@app.route('/api/kaggle-url', methods=['POST'])
+def receive_kaggle_url():
+    """
+    Reçoit l'URL ngrok du notebook Kaggle.
+    Appelé par cellule 4 et cellule 5 (re-push toutes les 5 min).
+    """
+    data = request.get_json(silent=True) or {}
+    if not check_secret(data):
+        return jsonify({'error': 'Secret invalide'}), 403
+
+    url    = (data.get('url') or '').strip()
+    device = data.get('device', 'Kaggle-TPU')
+
+    if not url or not url.startswith('http'):
+        return jsonify({'error': 'URL invalide'}), 400
+
+    with state_lock:
+        state['kaggle_url']    = url
+        state['kaggle_device'] = device
+        state['kaggle_seen']   = datetime.now(timezone.utc).isoformat()
+
+    log.info(f'✅ Kaggle connecté : {url} [{device}]')
+    return jsonify({'status': 'ok', 'message': 'URL enregistrée', 'url': url}), 200
+
+
+@app.route('/api/video-ready', methods=['POST'])
+def receive_video_ready():
+    """
+    Reçoit la notification quand une vidéo est prête (depuis watcher Kaggle).
+    Stocke l'URL GitHub ou ngrok pour que le frontend puisse la récupérer.
+    """
+    data = request.get_json(silent=True) or {}
+    if not check_secret(data):
+        return jsonify({'error': 'Secret invalide'}), 403
+
+    job_id    = data.get('job_id', 'unknown')
+    video_url = data.get('video_url', '')
+    source    = data.get('source', 'unknown')
+
+    if not video_url:
+        return jsonify({'error': 'video_url requis'}), 400
+
+    entry = {
+        'job_id':    job_id,
+        'video_url': video_url,
+        'source':    source,
+        'device':    data.get('device', ''),
+        'received':  datetime.now(timezone.utc).isoformat(),
+    }
+
+    with state_lock:
+        state['videos'].append(entry)
+        # Garder seulement les 50 dernières
+        state['videos'] = state['videos'][-50:]
+
+    # Mettre à jour le cache job
+    with jobs_lock:
+        if job_id in jobs_cache:
+            jobs_cache[job_id]['status']    = 'done'
+            jobs_cache[job_id]['progress']  = 100
+            jobs_cache[job_id]['video_url'] = video_url
+            jobs_cache[job_id]['result']    = video_url
+
+    log.info(f'🎬 Vidéo reçue — job {job_id} : {video_url[:80]}')
+    return jsonify({'status': 'ok', 'job_id': job_id}), 200
+
+
+# ════════════════════════════════════════════════════════════════════════
+#  ENDPOINTS DU FRONTEND (appelés par le navigateur)
+# ════════════════════════════════════════════════════════════════════════
+
+@app.route('/api/generate', methods=['POST'])
+def api_generate():
+    """
+    Reçoit une demande de génération du frontend.
+    Transmet au notebook Kaggle et retourne le job_id.
+    """
+    data   = request.get_json(silent=True) or {}
+    prompt = (data.get('prompt') or '').strip()
+
+    if not prompt:
+        return jsonify({'error': 'Prompt requis'}), 400
+
+    # Vérifier que Kaggle est connecté
+    with state_lock:
+        kaggle_url = state.get('kaggle_url')
+    if not kaggle_url:
+        return jsonify({
+            'error': 'Notebook Kaggle non connecté',
+            'help':  'Lancez les cellules 1 à 5 dans votre notebook Kaggle'
+        }), 503
+
+    # Générer un job_id côté Render aussi
+    jid = str(uuid.uuid4())[:12]
+    data['job_id'] = jid
+
+    # Initialiser le job dans le cache local
+    with jobs_lock:
+        jobs_cache[jid] = {
+            'id':        jid,
+            'status':    'queued',
+            'progress':  0,
+            'step':      'Envoi au notebook Kaggle…',
+            'result':    None,
+            'video_url': None,
+            'error':     None,
+            'created':   datetime.now(timezone.utc).isoformat(),
+        }
+
+    # Transmettre au notebook Kaggle (en thread pour ne pas bloquer)
+    def forward_async():
+        resp, err = forward_to_kaggle('/generate', 'POST', data, timeout=30)
+        with jobs_lock:
+            if jid not in jobs_cache:
+                return
+            if err:
+                jobs_cache[jid]['status'] = 'error'
+                jobs_cache[jid]['error']  = err
+            elif resp and resp.status_code == 200:
+                jobs_cache[jid]['status'] = 'processing'
+                jobs_cache[jid]['step']   = 'Traitement sur Kaggle TPU…'
+            else:
+                status_code = resp.status_code if resp else '?'
+                jobs_cache[jid]['status'] = 'error'
+                jobs_cache[jid]['error']  = f'Erreur Kaggle : {status_code}'
+
+    threading.Thread(target=forward_async, daemon=True).start()
+
+    return jsonify({'job_id': jid, 'status': 'queued'}), 200
+
+
+@app.route('/api/jobs/<jid>', methods=['GET'])
+def api_job_status(jid):
+    """
+    Polling de statut d'un job.
+    Vérifie d'abord le cache local, sinon interroge Kaggle directement.
+    """
+    # 1. Vérifier cache local
+    with jobs_lock:
+        job = jobs_cache.get(jid)
+
+    if job:
+        # Si done, retourner directement
+        if job.get('status') == 'done':
+            return jsonify(job)
+        # Si en cours, aller chercher le vrai statut chez Kaggle
+        resp, err = forward_to_kaggle(f'/api/jobs/{jid}', 'GET', timeout=10)
+        if resp and resp.status_code == 200:
+            kaggle_job = resp.json()
+            with jobs_lock:
+                # Merge : on garde video_url si Render l'a déjà
+                if jid in jobs_cache and jobs_cache[jid].get('video_url'):
+                    kaggle_job['video_url'] = jobs_cache[jid]['video_url']
+                jobs_cache[jid] = kaggle_job
+            return jsonify(kaggle_job)
+        # Kaggle inaccessible : retourner ce qu'on a
+        return jsonify(job)
+
+    # 2. Job inconnu localement → demander à Kaggle
+    resp, err = forward_to_kaggle(f'/api/jobs/{jid}', 'GET', timeout=10)
+    if err:
+        return jsonify({'error': err}), 503
+    if resp.status_code == 404:
+        return jsonify({'error': 'Job introuvable'}), 404
+    return jsonify(resp.json())
+
+
+@app.route('/api/jobs', methods=['GET'])
+def api_all_jobs():
+    """Liste tous les jobs connus par Render."""
+    with jobs_lock:
+        return jsonify({'jobs': list(jobs_cache.values()), 'count': len(jobs_cache)})
+
+
+@app.route('/api/videos', methods=['GET'])
+def api_videos():
+    """Liste les vidéos reçues et disponibles."""
+    with state_lock:
+        return jsonify({'videos': state['videos']})
+
+
+@app.route('/api/status', methods=['GET'])
+def api_status():
+    """Statut global de la plateforme (frontend polling toutes les 10s)."""
+    with state_lock:
+        kaggle_url    = state.get('kaggle_url')
+        kaggle_device = state.get('kaggle_device')
+        kaggle_seen   = state.get('kaggle_seen')
+        nb_videos     = len(state['videos'])
+
+    # Vérifier si Kaggle est vraiment vivant
+    kaggle_alive = False
+    if kaggle_url:
+        try:
+            r = requests.get(f"{kaggle_url}/health", timeout=5)
+            kaggle_alive = r.status_code == 200
+            if not kaggle_alive:
+                with state_lock:
+                    state['kaggle_url'] = None
+        except Exception:
+            with state_lock:
+                state['kaggle_url'] = None
+
     return jsonify({
-        "status":       "ok",
-        "platform":     "BENY-JOE IA",
-        "founder":      "KHEDIM BENYAKHLEF dit BENY-JOE",
-        "kaggle_ready": kaggle_url["url"] is not None,
-        "kaggle_url":   kaggle_url["url"],
-        "jobs_total":   len(jobs),
-        "server_time":  datetime.now(timezone.utc).isoformat(),
+        'platform':      PLATFORM_NAME,
+        'founder':       'KHEDIM BENYAKHLEF dit BENY-JOE',
+        'kaggle_connected': kaggle_alive,
+        'kaggle_device': kaggle_device,
+        'kaggle_seen':   kaggle_seen,
+        'videos_ready':  nb_videos,
+        'timestamp':     datetime.now(timezone.utc).isoformat(),
     })
 
 
-@app.route("/api/kaggle-url", methods=["POST"])
-def set_kaggle_url():
-    data = request.get_json(silent=True) or {}
-    secret = data.get("secret") or request.headers.get("X-Secret")
-    if secret != SECRET_KEY:
-        abort(403)
-    url = data.get("url", "").rstrip("/")
-    if not url.startswith("http"):
-        return jsonify({"error": "URL invalide"}), 400
-    kaggle_url["url"]        = url
-    kaggle_url["updated_at"] = datetime.now(timezone.utc).isoformat()
-    print(f"✅ Kaggle URL enregistrée : {url}")
-    return jsonify({"ok": True, "url": url})
+# ════════════════════════════════════════════════════════════════════════
+#  HEALTH CHECK (requis par Render)
+# ════════════════════════════════════════════════════════════════════════
+
+@app.route('/health', methods=['GET'])
+def health():
+    return jsonify({'status': 'ok', 'service': PLATFORM_NAME}), 200
 
 
-@app.route("/api/kaggle-url", methods=["GET"])
-def get_kaggle_url():
-    return jsonify(kaggle_url)
+# ════════════════════════════════════════════════════════════════════════
+#  FRONTEND : servir les fichiers statiques
+# ════════════════════════════════════════════════════════════════════════
+
+@app.route('/', methods=['GET'])
+def index():
+    """Page principale — sert index.html depuis le dossier static."""
+    return send_from_directory('static', 'index.html')
 
 
-@app.route("/api/generate", methods=["POST"])
-def generate():
-    data   = request.get_json(silent=True) or {}
-    prompt = (data.get("prompt") or "").strip()
-    if not prompt:
-        return jsonify({"error": "Prompt requis"}), 400
-
-    job_type = data.get("type", "video")
-    params   = {
-        "resolution":  data.get("resolution",  "1024x576"),
-        "frames":      int(data.get("frames",  120)),
-        "fps":         int(data.get("fps",     24)),
-        "voice":       data.get("voice",       True),
-        "music":       data.get("music",       True),
-        "voice_lang":  data.get("voice_lang",  "fr"),
-        "music_style": data.get("music_style", "cinematic"),
-        "duration":    int(data.get("duration", 10)),
-    }
-
-    jid = new_job(prompt, job_type=job_type, params=params)
-    update_job(jid, status="queued", step="Envoi au moteur Kaggle TPU…")
-
-    payload = {"job_id": jid, "prompt": prompt, "type": job_type, **params}
-    t = threading.Thread(target=forward_to_kaggle, args=(jid, payload), daemon=True)
-    t.start()
-
-    return jsonify({"job_id": jid, "status": "queued"})
-
-
-@app.route("/api/jobs", methods=["GET"])
-def list_jobs():
-    with lock:
-        return jsonify({
-            "queue_size": sum(1 for j in jobs.values() if j["status"] in ("pending","queued","processing")),
-            "jobs":       dict(jobs),
-        })
-
-
-@app.route("/api/jobs/<jid>", methods=["GET"])
-def get_job(jid):
-    with lock:
-        job = jobs.get(jid)
-    if not job:
-        return jsonify({"error": "Job introuvable"}), 404
-    return jsonify(job)
-
-
-@app.route("/api/video-ready", methods=["POST"])
-def video_ready():
-    data   = request.get_json(silent=True) or {}
-    jid    = data.get("job_id", "unknown")
-    url    = data.get("video_url")
-    if jid in jobs and url:
-        update_job(jid, status="done", progress=100, step="Vidéo prête !", result=url)
-    elif url:
-        with lock:
-            jobs[jid] = {
-                "id":         jid,
-                "type":       "video",
-                "prompt":     data.get("prompt", ""),
-                "status":     "done",
-                "progress":   100,
-                "step":       "Vidéo reçue du notebook",
-                "result":     url,
-                "error":      None,
-                "created_at": datetime.now(timezone.utc).isoformat(),
-                "params":     data,
-            }
-    return jsonify({"ok": True})
-
-
-@app.route("/api/jobs/<jid>/progress", methods=["POST"])
-def update_progress(jid):
-    data = request.get_json(silent=True) or {}
-    secret = data.get("secret") or request.headers.get("X-Secret")
-    if secret != SECRET_KEY:
-        abort(403)
-    update_job(jid,
-               status=data.get("status", "processing"),
-               progress=data.get("progress", 0),
-               step=data.get("step", ""))
-    return jsonify({"ok": True})
-
-
-@app.route("/api/download", methods=["GET"])
-def download_proxy():
-    import requests as req2
-    url   = request.args.get("url", "")
-    type_ = request.args.get("type", "video")
-    if not url or url == "null":
-        return jsonify({"error": "url manquante ou null"}), 400
+@app.route('/<path:path>', methods=['GET'])
+def static_files(path):
+    """Sert tous les fichiers statiques (JS, CSS, images)."""
     try:
-        hdrs = {"User-Agent": "Mozilla/5.0", "Accept": "*/*"}
-        r = req2.get(url, timeout=120, stream=True,
-                     allow_redirects=True, headers=hdrs)
-        if r.status_code != 200:
-            return jsonify({"error": f"Source erreur {r.status_code}"}), 502
-        mime = "video/mp4" if type_ == "video" else "image/png"
-        ext  = "mp4" if type_ == "video" else "png"
-        return Response(
-            r.iter_content(chunk_size=65536),
-            content_type=mime,
-            headers={
-                "Content-Disposition": f"attachment; filename=benyjoe-ia.{ext}",
-                "Content-Length": r.headers.get("Content-Length", ""),
-            }
-        )
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        return send_from_directory('static', path)
+    except Exception:
+        # SPA fallback → index.html
+        return send_from_directory('static', 'index.html')
 
 
-@app.route("/outputs/<path:filename>")
-def serve_output(filename):
-    return send_from_directory(OUTPUTS_DIR, filename)
+# ════════════════════════════════════════════════════════════════════════
+#  DÉMARRAGE
+# ════════════════════════════════════════════════════════════════════════
 
-
-@app.route("/", defaults={"path": ""})
-@app.route("/<path:path>")
-def spa(path):
-    index = os.path.join(app.static_folder, "index.html")
-    if os.path.exists(index):
-        return send_from_directory(app.static_folder, "index.html")
-    return "BENY-JOE IA — Backend opérationnel", 200
-
-
-# ════════════════════════════════════════════════════════════════════
-if __name__ == "__main__":
-    print("╔══════════════════════════════════════════════╗")
-    print("║  BENY-JOE IA — Serveur Backend              ║")
-    print("║  Fondé par KHEDIM BENYAKHLEF dit BENY-JOE  ║")
-    print("╚══════════════════════════════════════════════╝")
-    app.run(host="0.0.0.0", port=PORT, debug=False)
+if __name__ == '__main__':
+    log.info(f'🚀 {PLATFORM_NAME} — Render server démarré sur port {PORT}')
+    app.run(host='0.0.0.0', port=PORT, debug=False)
