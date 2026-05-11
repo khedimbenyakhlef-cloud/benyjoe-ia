@@ -12,7 +12,7 @@ import json
 import time
 import threading
 from datetime import datetime, timezone
-from flask import Flask, request, jsonify, send_from_directory, abort
+from flask import Flask, request, jsonify, send_from_directory, abort, Response
 from flask_cors import CORS
 
 # ── Config ────────────────────────────────────────────────────────────
@@ -26,9 +26,9 @@ app = Flask(__name__, static_folder="../frontend/public", static_url_path="")
 CORS(app)
 
 # ── In-memory store ───────────────────────────────────────────────────
-jobs    = {}        # job_id → {status, progress, step, result, error, meta}
+jobs    = {}
 lock    = threading.Lock()
-kaggle_url = {"url": None, "updated_at": None}   # URL ngrok active
+kaggle_url = {"url": None, "updated_at": None}
 
 # ════════════════════════════════════════════════════════════════════
 #  UTILS
@@ -59,7 +59,6 @@ def update_job(jid, **kwargs):
 
 
 def forward_to_kaggle(jid, payload):
-    """Envoie la requête au notebook Kaggle via ngrok."""
     import requests as req
     base = kaggle_url.get("url")
     if not base:
@@ -102,7 +101,6 @@ def health():
 
 @app.route("/api/kaggle-url", methods=["POST"])
 def set_kaggle_url():
-    """Le notebook Kaggle envoie son URL ngrok ici."""
     data = request.get_json(silent=True) or {}
     secret = data.get("secret") or request.headers.get("X-Secret")
     if secret != SECRET_KEY:
@@ -123,13 +121,12 @@ def get_kaggle_url():
 
 @app.route("/api/generate", methods=["POST"])
 def generate():
-    """Lance une génération vidéo / image / animation."""
     data   = request.get_json(silent=True) or {}
     prompt = (data.get("prompt") or "").strip()
     if not prompt:
         return jsonify({"error": "Prompt requis"}), 400
 
-    job_type = data.get("type", "video")   # video | image | animate
+    job_type = data.get("type", "video")
     params   = {
         "resolution":  data.get("resolution",  "1024x576"),
         "frames":      int(data.get("frames",  120)),
@@ -171,18 +168,12 @@ def get_job(jid):
 
 @app.route("/api/video-ready", methods=["POST"])
 def video_ready():
-    """Le notebook signale qu'une vidéo est prête (watcher)."""
     data   = request.get_json(silent=True) or {}
     jid    = data.get("job_id", "unknown")
     url    = data.get("video_url")
     if jid in jobs and url:
-        update_job(jid,
-                   status="done",
-                   progress=100,
-                   step="Vidéo prête !",
-                   result=url)
+        update_job(jid, status="done", progress=100, step="Vidéo prête !", result=url)
     elif url:
-        # Vidéo sans job connu → on l'enregistre quand même
         with lock:
             jobs[jid] = {
                 "id":         jid,
@@ -201,7 +192,6 @@ def video_ready():
 
 @app.route("/api/jobs/<jid>/progress", methods=["POST"])
 def update_progress(jid):
-    """Le notebook met à jour la progression d'un job."""
     data = request.get_json(silent=True) or {}
     secret = data.get("secret") or request.headers.get("X-Secret")
     if secret != SECRET_KEY:
@@ -213,33 +203,6 @@ def update_progress(jid):
     return jsonify({"ok": True})
 
 
-@app.route("/outputs/<path:filename>")
-def serve_output(filename):
-    return send_from_directory(OUTPUTS_DIR, filename)
-
-
-# ── SPA fallback ──────────────────────────────────────────────────────
-@app.route("/", defaults={"path": ""})
-@app.route("/<path:path>")
-def spa(path):
-    index = os.path.join(app.static_folder, "index.html")
-    if os.path.exists(index):
-        return send_from_directory(app.static_folder, "index.html")
-    return "BENY-JOE IA — Backend opérationnel", 200
-
-
-# ════════════════════════════════════════════════════════════════════
-if __name__ == "__main__":
-    print("╔══════════════════════════════════════════════╗")
-    print("║  BENY-JOE IA — Serveur Backend              ║")
-    print("║  Fondé par KHEDIM BENYAKHLEF dit BENY-JOE  ║")
-    print("╚══════════════════════════════════════════════╝")
-    app.run(host="0.0.0.0", port=PORT, debug=False)
-
-@app.route("/api/download", methods=["GET"])
-def download_proxy():
-    import requests as req2
-    url  = request.args.get("url", "")
 @app.route("/api/download", methods=["GET"])
 def download_proxy():
     import requests as req2
@@ -248,7 +211,6 @@ def download_proxy():
     if not url or url == "null":
         return jsonify({"error": "url manquante ou null"}), 400
     try:
-        from flask import Response
         hdrs = {"User-Agent": "Mozilla/5.0", "Accept": "*/*"}
         r = req2.get(url, timeout=120, stream=True,
                      allow_redirects=True, headers=hdrs)
@@ -266,3 +228,26 @@ def download_proxy():
         )
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+
+@app.route("/outputs/<path:filename>")
+def serve_output(filename):
+    return send_from_directory(OUTPUTS_DIR, filename)
+
+
+@app.route("/", defaults={"path": ""})
+@app.route("/<path:path>")
+def spa(path):
+    index = os.path.join(app.static_folder, "index.html")
+    if os.path.exists(index):
+        return send_from_directory(app.static_folder, "index.html")
+    return "BENY-JOE IA — Backend opérationnel", 200
+
+
+# ════════════════════════════════════════════════════════════════════
+if __name__ == "__main__":
+    print("╔══════════════════════════════════════════════╗")
+    print("║  BENY-JOE IA — Serveur Backend              ║")
+    print("║  Fondé par KHEDIM BENYAKHLEF dit BENY-JOE  ║")
+    print("╚══════════════════════════════════════════════╝")
+    app.run(host="0.0.0.0", port=PORT, debug=False)
