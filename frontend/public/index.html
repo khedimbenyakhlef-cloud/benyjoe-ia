@@ -1044,7 +1044,8 @@ function showResult(url, type) {
   } else {
     vid.src = url; vid.style.display = 'block';
   }
-  dlBtn.href = url;
+  const ext2 = type === 'image' ? 'png' : 'mp4';
+  dlBtn.href = API + '/api/download?url=' + encodeURIComponent(url) + '&type=' + type;
   dlBtn.download = 'benyjoe-ia-result.'+(type==='image'?'png':'mp4');
   wrap.classList.add('visible');
   showProgress(false);

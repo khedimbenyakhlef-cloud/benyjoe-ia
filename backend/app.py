@@ -235,3 +235,20 @@ if __name__ == "__main__":
     print("║  Fondé par KHEDIM BENYAKHLEF dit BENY-JOE  ║")
     print("╚══════════════════════════════════════════════╝")
     app.run(host="0.0.0.0", port=PORT, debug=False)
+
+@app.route("/api/download", methods=["GET"])
+def download_proxy():
+    import requests as req2
+    url  = request.args.get("url", "")
+    type_ = request.args.get("type", "video")
+    if not url:
+        return {"error": "url manquante"}, 400
+    try:
+        from flask import Response
+        r = req2.get(url, timeout=60, stream=True)
+        mime = "video/mp4" if type_ == "video" else "image/png"
+        return Response(r.iter_content(chunk_size=8192),
+                        content_type=mime,
+                        headers={"Content-Disposition": "attachment"})
+    except Exception as e:
+        return {"error": str(e)}, 500
