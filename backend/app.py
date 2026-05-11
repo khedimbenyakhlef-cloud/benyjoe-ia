@@ -26,12 +26,17 @@ import time
 import logging
 import threading
 import requests
+from pathlib import Path
 from datetime import datetime, timezone
 from flask import Flask, request, jsonify, send_from_directory, abort, redirect
 from flask_cors import CORS
 
+# ── Chemin absolu vers frontend/public/ (structure du repo) ───────────
+BASE_DIR     = Path(__file__).resolve().parent        # backend/
+FRONTEND_DIR = BASE_DIR.parent / 'frontend' / 'public'  # frontend/public/
+
 # ── Configuration ──────────────────────────────────────────────────────
-app = Flask(__name__, static_folder='static', template_folder='templates')
+app = Flask(__name__, static_folder=str(FRONTEND_DIR))
 CORS(app)
 
 logging.basicConfig(level=logging.INFO)
@@ -313,23 +318,26 @@ def health():
 
 
 # ════════════════════════════════════════════════════════════════════════
-#  FRONTEND : servir les fichiers statiques
+#  FRONTEND : servir les fichiers depuis frontend/public/
 # ════════════════════════════════════════════════════════════════════════
 
 @app.route('/', methods=['GET'])
 def index():
-    """Page principale — sert index.html depuis le dossier static."""
-    return send_from_directory('static', 'index.html')
+    """Page principale — sert index.html depuis frontend/public/."""
+    return send_from_directory(str(FRONTEND_DIR), 'index.html')
 
 
 @app.route('/<path:path>', methods=['GET'])
 def static_files(path):
     """Sert tous les fichiers statiques (JS, CSS, images)."""
-    try:
-        return send_from_directory('static', path)
-    except Exception:
-        # SPA fallback → index.html
-        return send_from_directory('static', 'index.html')
+    # Ne pas intercepter les routes /api/
+    if path.startswith('api/'):
+        abort(404)
+    target = FRONTEND_DIR / path
+    if target.exists() and target.is_file():
+        return send_from_directory(str(FRONTEND_DIR), path)
+    # SPA fallback → index.html
+    return send_from_directory(str(FRONTEND_DIR), 'index.html')
 
 
 # ════════════════════════════════════════════════════════════════════════
