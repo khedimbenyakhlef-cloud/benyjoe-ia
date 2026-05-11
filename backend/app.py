@@ -240,15 +240,29 @@ if __name__ == "__main__":
 def download_proxy():
     import requests as req2
     url  = request.args.get("url", "")
+@app.route("/api/download", methods=["GET"])
+def download_proxy():
+    import requests as req2
+    url   = request.args.get("url", "")
     type_ = request.args.get("type", "video")
-    if not url:
-        return {"error": "url manquante"}, 400
+    if not url or url == "null":
+        return jsonify({"error": "url manquante ou null"}), 400
     try:
         from flask import Response
-        r = req2.get(url, timeout=60, stream=True)
+        hdrs = {"User-Agent": "Mozilla/5.0", "Accept": "*/*"}
+        r = req2.get(url, timeout=120, stream=True,
+                     allow_redirects=True, headers=hdrs)
+        if r.status_code != 200:
+            return jsonify({"error": f"Source erreur {r.status_code}"}), 502
         mime = "video/mp4" if type_ == "video" else "image/png"
-        return Response(r.iter_content(chunk_size=8192),
-                        content_type=mime,
-                        headers={"Content-Disposition": "attachment"})
+        ext  = "mp4" if type_ == "video" else "png"
+        return Response(
+            r.iter_content(chunk_size=65536),
+            content_type=mime,
+            headers={
+                "Content-Disposition": f"attachment; filename=benyjoe-ia.{ext}",
+                "Content-Length": r.headers.get("Content-Length", ""),
+            }
+        )
     except Exception as e:
-        return {"error": str(e)}, 500
+        return jsonify({"error": str(e)}), 500
