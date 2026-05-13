@@ -6,534 +6,200 @@
   <title>BENY-JOE IA — Génération Vidéo & Image HD</title>
   <meta name="description" content="Plateforme IA de génération vidéo longue durée, images HD et animation. Fondée par KHEDIM BENYAKHLEF dit BENY-JOE."/>
   <link rel="icon" type="image/svg+xml" href="favicon.svg"/>
-  <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Exo+2:ital,wght@0,300;0,400;0,600;0,800;1,300&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet"/>
-
   <style>
-    /* ══════════════════════════════════════════════
-       BENY-JOE IA — Design System
-       Theme: Futuriste Noir / Or / Cyan électrique
-    ═══════════════════════════════════════════════ */
     :root {
-      --bg:        #050810;
-      --bg2:       #0b1020;
-      --bg3:       #111828;
-      --gold:      #f0b429;
-      --gold-dim:  #c8942a;
-      --cyan:      #00e5ff;
-      --cyan-dim:  #00afc7;
-      --red:       #ff3a5c;
-      --green:     #00e676;
-      --text:      #e8edf8;
-      --text-dim:  #7b8ba8;
-      --border:    rgba(240,180,41,0.18);
-      --border2:   rgba(0,229,255,0.15);
-      --glow-g:    0 0 24px rgba(240,180,41,0.35);
-      --glow-c:    0 0 24px rgba(0,229,255,0.35);
-      --ff-title:  'Bebas Neue', sans-serif;
-      --ff-body:   'Exo 2', sans-serif;
-      --ff-mono:   'JetBrains Mono', monospace;
-      --r:         10px;
+      --bg:#050810;--bg2:#0b1020;--bg3:#111828;
+      --gold:#f0b429;--gold-dim:#c8942a;
+      --cyan:#00e5ff;--cyan-dim:#00afc7;
+      --red:#ff3a5c;--green:#00e676;
+      --text:#e8edf8;--text-dim:#7b8ba8;
+      --border:rgba(240,180,41,0.18);--border2:rgba(0,229,255,0.15);
+      --glow-g:0 0 24px rgba(240,180,41,0.35);--glow-c:0 0 24px rgba(0,229,255,0.35);
+      --ff-title:'Bebas Neue',sans-serif;--ff-body:'Exo 2',sans-serif;--ff-mono:'JetBrains Mono',monospace;
+      --r:10px;
     }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    html{scroll-behavior:smooth}
+    body{background:var(--bg);color:var(--text);font-family:var(--ff-body);font-weight:300;min-height:100vh;overflow-x:hidden}
+    body::before{content:'';position:fixed;inset:0;z-index:0;background-image:linear-gradient(rgba(0,229,255,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(0,229,255,0.03) 1px,transparent 1px);background-size:48px 48px;pointer-events:none}
+    body::after{content:'';position:fixed;inset:0;z-index:0;background:radial-gradient(ellipse 80% 60% at 50% -10%,rgba(240,180,41,0.08) 0%,transparent 70%);pointer-events:none}
+    ::-webkit-scrollbar{width:6px}::-webkit-scrollbar-track{background:var(--bg2)}::-webkit-scrollbar-thumb{background:var(--gold-dim);border-radius:3px}
 
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    /* NAV */
+    nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;gap:16px;padding:0 32px;height:64px;background:rgba(5,8,16,0.88);backdrop-filter:blur(18px);border-bottom:1px solid var(--border)}
+    .nav-logo{display:flex;align-items:center;gap:12px;text-decoration:none}
+    .nav-logo svg{width:38px;height:38px;flex-shrink:0}
+    .nav-brand{display:flex;flex-direction:column;line-height:1}
+    .nav-brand-name{font-family:var(--ff-title);font-size:22px;letter-spacing:2px;color:var(--gold);text-shadow:var(--glow-g)}
+    .nav-brand-sub{font-size:9px;letter-spacing:3px;color:var(--cyan-dim);text-transform:uppercase;font-family:var(--ff-mono)}
+    .nav-spacer{flex:1}
+    .nav-status{display:flex;align-items:center;gap:8px;font-family:var(--ff-mono);font-size:11px;color:var(--text-dim)}
+    .dot{width:8px;height:8px;border-radius:50%;background:var(--text-dim);transition:background 0.4s,box-shadow 0.4s}
+    .dot.online{background:var(--green);box-shadow:0 0 8px var(--green)}
+    .dot.offline{background:var(--red);box-shadow:0 0 8px var(--red)}
+    .nav-links{display:flex;gap:4px}
+    .nav-link{padding:6px 14px;font-size:12px;font-family:var(--ff-mono);color:var(--text-dim);border:1px solid transparent;border-radius:6px;cursor:pointer;background:none;transition:all 0.2s;letter-spacing:1px}
+    .nav-link:hover,.nav-link.active{color:var(--cyan);border-color:var(--border2);background:rgba(0,229,255,0.05)}
 
-    html { scroll-behavior: smooth; }
+    /* HERO */
+    .hero{position:relative;z-index:1;text-align:center;padding:72px 32px 48px}
+    .hero-badge{display:inline-flex;align-items:center;gap:8px;padding:5px 14px;border:1px solid rgba(240,180,41,0.4);border-radius:99px;font-family:var(--ff-mono);font-size:10px;letter-spacing:3px;color:var(--gold);margin-bottom:28px;background:rgba(240,180,41,0.06)}
+    .hero-title{font-family:var(--ff-title);font-size:clamp(52px,9vw,110px);letter-spacing:6px;line-height:0.92;margin-bottom:20px}
+    .hero-title .line1{color:var(--gold);text-shadow:var(--glow-g);display:block}
+    .hero-title .line2{color:var(--cyan);text-shadow:var(--glow-c);display:block}
+    .hero-sub{font-size:15px;font-weight:300;color:var(--text-dim);max-width:540px;margin:0 auto 40px;line-height:1.7}
+    .hero-sub strong{color:var(--text);font-weight:600}
+    .hero-chips{display:flex;flex-wrap:wrap;justify-content:center;gap:10px}
+    .chip{padding:5px 14px;border:1px solid var(--border2);border-radius:99px;font-size:11px;font-family:var(--ff-mono);color:var(--cyan-dim);background:rgba(0,229,255,0.04)}
 
-    body {
-      background: var(--bg);
-      color: var(--text);
-      font-family: var(--ff-body);
-      font-weight: 300;
-      min-height: 100vh;
-      overflow-x: hidden;
-    }
+    /* MAIN */
+    .main{position:relative;z-index:1;max-width:1100px;margin:0 auto;padding:0 24px 80px}
 
-    /* ── Background grid ──────────────────────────── */
-    body::before {
-      content: '';
-      position: fixed; inset: 0; z-index: 0;
-      background-image:
-        linear-gradient(rgba(0,229,255,0.03) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(0,229,255,0.03) 1px, transparent 1px);
-      background-size: 48px 48px;
-      pointer-events: none;
-    }
-    body::after {
-      content: '';
-      position: fixed; inset: 0; z-index: 0;
-      background: radial-gradient(ellipse 80% 60% at 50% -10%, rgba(240,180,41,0.08) 0%, transparent 70%);
-      pointer-events: none;
-    }
+    /* TABS */
+    .tabs{display:flex;gap:4px;padding:6px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);margin-bottom:28px}
+    .tab{flex:1;padding:12px 8px;display:flex;align-items:center;justify-content:center;gap:8px;font-family:var(--ff-mono);font-size:12px;letter-spacing:1px;color:var(--text-dim);border-radius:7px;cursor:pointer;border:1px solid transparent;background:none;transition:all 0.25s}
+    .tab:hover{color:var(--text);background:rgba(255,255,255,0.03)}
+    .tab.active{color:var(--gold);background:rgba(240,180,41,0.08);border-color:rgba(240,180,41,0.25);box-shadow:var(--glow-g)}
+    .tab-icon{font-size:16px}
 
-    /* ── Scrollbar ─────────────────────────────────── */
-    ::-webkit-scrollbar { width: 6px; }
-    ::-webkit-scrollbar-track { background: var(--bg2); }
-    ::-webkit-scrollbar-thumb { background: var(--gold-dim); border-radius: 3px; }
+    /* CARDS */
+    .card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:28px;margin-bottom:20px}
+    .card-title{font-family:var(--ff-title);font-size:18px;letter-spacing:2px;color:var(--gold);margin-bottom:20px;display:flex;align-items:center;gap:10px}
 
-    /* ══════ NAV ═══════════════════════════════════ */
-    nav {
-      position: sticky; top: 0; z-index: 100;
-      display: flex; align-items: center; gap: 16px;
-      padding: 0 32px;
-      height: 64px;
-      background: rgba(5,8,16,0.88);
-      backdrop-filter: blur(18px);
-      border-bottom: 1px solid var(--border);
-    }
+    /* FORM */
+    .form-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+    .form-row.full{grid-template-columns:1fr}
+    .form-row.three{grid-template-columns:1fr 1fr 1fr}
+    label{display:block;font-size:11px;font-family:var(--ff-mono);letter-spacing:2px;color:var(--text-dim);margin-bottom:6px;text-transform:uppercase}
+    textarea,input,select{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--ff-body);font-size:14px;padding:12px 16px;transition:border-color 0.2s,box-shadow 0.2s;outline:none;appearance:none}
+    textarea:focus,input:focus,select:focus{border-color:var(--cyan-dim);box-shadow:0 0 0 3px rgba(0,229,255,0.08)}
+    textarea{resize:vertical;min-height:100px}
+    select option{background:var(--bg3)}
 
-    .nav-logo {
-      display: flex; align-items: center; gap: 12px;
-      text-decoration: none;
-    }
-    .nav-logo svg { width: 38px; height: 38px; flex-shrink: 0; }
+    /* SLIDER */
+    .slider-row{display:flex;align-items:center;gap:14px}
+    input[type=range]{-webkit-appearance:none;flex:1;height:4px;background:var(--bg3);border:none;padding:0;border-radius:2px}
+    input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:var(--gold);border:2px solid var(--bg2);cursor:pointer;box-shadow:var(--glow-g)}
+    .slider-val{font-family:var(--ff-mono);font-size:13px;color:var(--gold);min-width:40px;text-align:right}
 
-    .nav-brand {
-      display: flex; flex-direction: column; line-height: 1;
-    }
-    .nav-brand-name {
-      font-family: var(--ff-title);
-      font-size: 22px;
-      letter-spacing: 2px;
-      color: var(--gold);
-      text-shadow: var(--glow-g);
-    }
-    .nav-brand-sub {
-      font-size: 9px;
-      letter-spacing: 3px;
-      color: var(--cyan-dim);
-      text-transform: uppercase;
-      font-family: var(--ff-mono);
-    }
+    /* TOGGLE */
+    .toggle-row{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:var(--bg3);border:1px solid var(--border);border-radius:8px}
+    .toggle-label{font-size:13px;color:var(--text)}
+    .toggle-label span{font-family:var(--ff-mono);font-size:10px;color:var(--text-dim);display:block}
+    .toggle-switch{position:relative;width:42px;height:24px;cursor:pointer}
+    .toggle-switch input{opacity:0;width:0;height:0}
+    .toggle-track{position:absolute;inset:0;background:var(--bg2);border:1px solid var(--border);border-radius:12px;transition:all 0.3s}
+    .toggle-switch input:checked~.toggle-track{background:rgba(240,180,41,0.2);border-color:var(--gold);box-shadow:var(--glow-g)}
+    .toggle-track::after{content:'';position:absolute;left:2px;top:2px;width:18px;height:18px;border-radius:50%;background:var(--text-dim);transition:all 0.3s}
+    .toggle-switch input:checked~.toggle-track::after{left:20px;background:var(--gold)}
 
-    .nav-spacer { flex: 1; }
+    /* BUTTON */
+    .btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;padding:14px 32px;font-family:var(--ff-title);font-size:18px;letter-spacing:2px;border-radius:8px;cursor:pointer;border:none;transition:all 0.25s}
+    .btn-primary{background:linear-gradient(135deg,var(--gold) 0%,#e08c00 100%);color:#0a0800;box-shadow:0 4px 24px rgba(240,180,41,0.35)}
+    .btn-primary:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 8px 32px rgba(240,180,41,0.5)}
+    .btn-primary:disabled{opacity:0.4;cursor:not-allowed;transform:none}
+    .btn-outline{background:transparent;border:1px solid var(--border2);color:var(--cyan)}
+    .btn-outline:hover{background:rgba(0,229,255,0.06)}
+    .btn-full{width:100%}
 
-    .nav-status {
-      display: flex; align-items: center; gap: 8px;
-      font-family: var(--ff-mono); font-size: 11px;
-      color: var(--text-dim);
-    }
-    .dot {
-      width: 8px; height: 8px; border-radius: 50%;
-      background: var(--text-dim);
-      transition: background 0.4s, box-shadow 0.4s;
-    }
-    .dot.online  { background: var(--green); box-shadow: 0 0 8px var(--green); }
-    .dot.offline { background: var(--red);   box-shadow: 0 0 8px var(--red); }
+    /* PROGRESS */
+    .progress-wrap{display:none;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:20px;margin-top:16px}
+    .progress-wrap.visible{display:block}
+    .progress-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+    .progress-step{font-size:13px;color:var(--cyan);font-family:var(--ff-mono)}
+    .progress-pct{font-family:var(--ff-mono);font-size:13px;color:var(--gold)}
+    .progress-bar-bg{height:6px;background:var(--bg2);border-radius:3px;overflow:hidden}
+    .progress-bar{height:100%;background:linear-gradient(90deg,var(--gold),var(--cyan));border-radius:3px;width:0%;transition:width 0.4s ease;box-shadow:0 0 12px rgba(240,180,41,0.4)}
 
-    .nav-links {
-      display: flex; gap: 4px;
-    }
-    .nav-link {
-      padding: 6px 14px;
-      font-size: 12px; font-family: var(--ff-mono);
-      color: var(--text-dim);
-      border: 1px solid transparent;
-      border-radius: 6px;
-      cursor: pointer;
-      background: none;
-      transition: all 0.2s;
-      letter-spacing: 1px;
-    }
-    .nav-link:hover, .nav-link.active {
-      color: var(--cyan);
-      border-color: var(--border2);
-      background: rgba(0,229,255,0.05);
-    }
+    /* RESULT */
+    .result-wrap{display:none;margin-top:24px}
+    .result-wrap.visible{display:block}
+    .result-title{font-family:var(--ff-title);font-size:16px;letter-spacing:2px;color:var(--green);margin-bottom:14px;display:flex;align-items:center;gap:8px}
 
-    /* ══════ HERO ══════════════════════════════════ */
-    .hero {
-      position: relative; z-index: 1;
-      text-align: center;
-      padding: 72px 32px 48px;
-    }
-    .hero-badge {
-      display: inline-flex; align-items: center; gap: 8px;
-      padding: 5px 14px;
-      border: 1px solid rgba(240,180,41,0.4);
-      border-radius: 99px;
-      font-family: var(--ff-mono); font-size: 10px;
-      letter-spacing: 3px;
-      color: var(--gold);
-      margin-bottom: 28px;
-      background: rgba(240,180,41,0.06);
-    }
-    .hero-title {
-      font-family: var(--ff-title);
-      font-size: clamp(52px, 9vw, 110px);
-      letter-spacing: 6px;
-      line-height: 0.92;
-      margin-bottom: 20px;
-    }
-    .hero-title .line1 { color: var(--gold); text-shadow: var(--glow-g); display: block; }
-    .hero-title .line2 { color: var(--cyan); text-shadow: var(--glow-c); display: block; }
+    /* ✅ Player vidéo complet avec tous les contrôles */
+    .video-container{position:relative;width:100%;background:#000;border-radius:8px;border:1px solid var(--border2);box-shadow:0 0 32px rgba(0,229,255,0.12);overflow:hidden}
+    video.result-video{width:100%;display:block;max-height:576px;background:#000}
+    video.result-video::-webkit-media-controls{display:flex!important}
+    video.result-video::-webkit-media-controls-panel{background:rgba(5,8,16,0.92)}
 
-    .hero-sub {
-      font-size: 15px; font-weight: 300;
-      color: var(--text-dim);
-      max-width: 540px; margin: 0 auto 40px;
-      line-height: 1.7;
-    }
-    .hero-sub strong { color: var(--text); font-weight: 600; }
+    img.result-image{width:100%;border-radius:8px;border:1px solid var(--border);box-shadow:0 0 24px rgba(240,180,41,0.1)}
+    .result-actions{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap}
+    .result-meta{font-family:var(--ff-mono);font-size:11px;color:var(--text-dim);margin-top:10px;padding:10px 14px;background:var(--bg3);border-radius:6px;border:1px solid var(--border)}
 
-    .hero-chips {
-      display: flex; flex-wrap: wrap; justify-content: center; gap: 10px;
-      margin-bottom: 0;
-    }
-    .chip {
-      padding: 5px 14px;
-      border: 1px solid var(--border2);
-      border-radius: 99px;
-      font-size: 11px; font-family: var(--ff-mono);
-      color: var(--cyan-dim);
-      background: rgba(0,229,255,0.04);
-    }
+    /* JOBS */
+    .jobs-list{display:flex;flex-direction:column;gap:10px}
+    .job-card{display:grid;grid-template-columns:auto 1fr auto auto;align-items:center;gap:14px;padding:14px 18px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;font-size:13px}
+    .job-status-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+    .job-status-dot.pending{background:var(--text-dim)}
+    .job-status-dot.queued{background:var(--gold);box-shadow:0 0 6px var(--gold);animation:pulse 1.5s infinite}
+    .job-status-dot.processing{background:var(--cyan);box-shadow:0 0 6px var(--cyan);animation:pulse 1s infinite}
+    .job-status-dot.done{background:var(--green);box-shadow:0 0 6px var(--green)}
+    .job-status-dot.error{background:var(--red);box-shadow:0 0 6px var(--red)}
+    @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+    .job-prompt{color:var(--text);font-size:13px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+    .job-meta{font-family:var(--ff-mono);font-size:10px;color:var(--text-dim)}
 
-    /* ══════ MAIN PANEL ════════════════════════════ */
-    .main {
-      position: relative; z-index: 1;
-      max-width: 1100px;
-      margin: 0 auto;
-      padding: 0 24px 80px;
-    }
+    /* ABOUT */
+    .about-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+    .about-card{padding:20px;background:var(--bg3);border:1px solid var(--border);border-radius:8px}
+    .about-card-title{font-family:var(--ff-title);font-size:15px;letter-spacing:2px;color:var(--cyan);margin-bottom:10px}
+    .about-card p{font-size:13px;color:var(--text-dim);line-height:1.7}
+    .about-card strong{color:var(--gold)}
+    .specs-table{width:100%;border-collapse:collapse;font-size:13px}
+    .specs-table td{padding:10px 14px;border-bottom:1px solid var(--border)}
+    .specs-table td:first-child{color:var(--text-dim);font-family:var(--ff-mono);font-size:11px;letter-spacing:1px}
+    .specs-table td:last-child{color:var(--gold);font-weight:600}
 
-    /* ── Tabs ──────────────────────────────────────── */
-    .tabs {
-      display: flex; gap: 4px;
-      padding: 6px;
-      background: var(--bg2);
-      border: 1px solid var(--border);
-      border-radius: var(--r);
-      margin-bottom: 28px;
-    }
-    .tab {
-      flex: 1; padding: 12px 8px;
-      display: flex; align-items: center; justify-content: center; gap: 8px;
-      font-family: var(--ff-mono); font-size: 12px; letter-spacing: 1px;
-      color: var(--text-dim);
-      border-radius: 7px;
-      cursor: pointer;
-      border: 1px solid transparent;
-      background: none;
-      transition: all 0.25s;
-    }
-    .tab:hover { color: var(--text); background: rgba(255,255,255,0.03); }
-    .tab.active {
-      color: var(--gold);
-      background: rgba(240,180,41,0.08);
-      border-color: rgba(240,180,41,0.25);
-      box-shadow: var(--glow-g);
-    }
-    .tab-icon { font-size: 16px; }
+    /* CONN */
+    .conn-panel{display:flex;align-items:center;gap:12px;padding:14px 18px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;margin-bottom:20px;font-size:12px;font-family:var(--ff-mono)}
+    .conn-url{flex:1;color:var(--text-dim);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .conn-url.active{color:var(--cyan)}
 
-    /* ── Cards ─────────────────────────────────────── */
-    .card {
-      background: var(--bg2);
-      border: 1px solid var(--border);
-      border-radius: var(--r);
-      padding: 28px;
-      margin-bottom: 20px;
-    }
-    .card-title {
-      font-family: var(--ff-title);
-      font-size: 18px; letter-spacing: 2px;
-      color: var(--gold); margin-bottom: 20px;
-      display: flex; align-items: center; gap: 10px;
-    }
+    /* ALERT */
+    .alert{padding:12px 16px;border-radius:8px;font-size:13px;margin-bottom:16px;display:none}
+    .alert.visible{display:block}
+    .alert.error{background:rgba(255,58,92,0.1);border:1px solid rgba(255,58,92,0.3);color:#ff8fa3}
+    .alert.success{background:rgba(0,230,118,0.08);border:1px solid rgba(0,230,118,0.25);color:var(--green)}
+    .alert.info{background:rgba(0,229,255,0.06);border:1px solid rgba(0,229,255,0.2);color:var(--cyan)}
 
-    /* ── Form ──────────────────────────────────────── */
-    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
-    .form-row.full { grid-template-columns: 1fr; }
-    .form-row.three { grid-template-columns: 1fr 1fr 1fr; }
+    .divider{border:none;border-top:1px solid var(--border);margin:20px 0}
 
-    label {
-      display: block;
-      font-size: 11px; font-family: var(--ff-mono);
-      letter-spacing: 2px; color: var(--text-dim);
-      margin-bottom: 6px; text-transform: uppercase;
-    }
+    footer{position:relative;z-index:1;text-align:center;padding:32px;border-top:1px solid var(--border);font-size:12px;color:var(--text-dim)}
+    footer strong{color:var(--gold)}
+    footer .footer-logo{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:12px}
+    footer .footer-logo svg{width:28px;height:28px}
 
-    textarea, input, select {
-      width: 100%;
-      background: var(--bg3);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      color: var(--text);
-      font-family: var(--ff-body); font-size: 14px;
-      padding: 12px 16px;
-      transition: border-color 0.2s, box-shadow 0.2s;
-      outline: none;
-      appearance: none;
-    }
-    textarea:focus, input:focus, select:focus {
-      border-color: var(--cyan-dim);
-      box-shadow: 0 0 0 3px rgba(0,229,255,0.08);
-    }
-    textarea { resize: vertical; min-height: 100px; }
-    select option { background: var(--bg3); }
+    .page{display:none}
+    .page.active{display:block}
 
-    /* ── Slider ────────────────────────────────────── */
-    .slider-row { display: flex; align-items: center; gap: 14px; }
-    input[type=range] {
-      -webkit-appearance: none;
-      flex: 1; height: 4px;
-      background: var(--bg3); border: none; padding: 0;
-      border-radius: 2px;
-    }
-    input[type=range]::-webkit-slider-thumb {
-      -webkit-appearance: none;
-      width: 18px; height: 18px; border-radius: 50%;
-      background: var(--gold); border: 2px solid var(--bg2);
-      cursor: pointer; box-shadow: var(--glow-g);
-    }
-    .slider-val {
-      font-family: var(--ff-mono); font-size: 13px; color: var(--gold);
-      min-width: 40px; text-align: right;
-    }
-
-    /* ── Toggle ────────────────────────────────────── */
-    .toggle-row {
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 12px 16px;
-      background: var(--bg3);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-    }
-    .toggle-label { font-size: 13px; color: var(--text); }
-    .toggle-label span { font-family: var(--ff-mono); font-size: 10px; color: var(--text-dim); display: block; }
-    .toggle-switch {
-      position: relative; width: 42px; height: 24px;
-      cursor: pointer;
-    }
-    .toggle-switch input { opacity: 0; width: 0; height: 0; }
-    .toggle-track {
-      position: absolute; inset: 0;
-      background: var(--bg2);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      transition: all 0.3s;
-    }
-    .toggle-switch input:checked ~ .toggle-track {
-      background: rgba(240,180,41,0.2);
-      border-color: var(--gold);
-      box-shadow: var(--glow-g);
-    }
-    .toggle-track::after {
-      content: '';
-      position: absolute; left: 2px; top: 2px;
-      width: 18px; height: 18px; border-radius: 50%;
-      background: var(--text-dim);
-      transition: all 0.3s;
-    }
-    .toggle-switch input:checked ~ .toggle-track::after {
-      left: 20px;
-      background: var(--gold);
-    }
-
-    /* ── Button ────────────────────────────────────── */
-    .btn {
-      display: inline-flex; align-items: center; justify-content: center; gap: 10px;
-      padding: 14px 32px;
-      font-family: var(--ff-title); font-size: 18px; letter-spacing: 2px;
-      border-radius: 8px; cursor: pointer;
-      border: none; transition: all 0.25s;
-    }
-    .btn-primary {
-      background: linear-gradient(135deg, var(--gold) 0%, #e08c00 100%);
-      color: #0a0800;
-      box-shadow: 0 4px 24px rgba(240,180,41,0.35);
-    }
-    .btn-primary:hover:not(:disabled) {
-      transform: translateY(-2px);
-      box-shadow: 0 8px 32px rgba(240,180,41,0.5);
-    }
-    .btn-primary:disabled {
-      opacity: 0.4; cursor: not-allowed; transform: none;
-    }
-    .btn-outline {
-      background: transparent;
-      border: 1px solid var(--border2);
-      color: var(--cyan);
-    }
-    .btn-outline:hover { background: rgba(0,229,255,0.06); }
-
-    .btn-full { width: 100%; }
-
-    /* ── Progress ──────────────────────────────────── */
-    .progress-wrap {
-      display: none;
-      background: var(--bg3); border: 1px solid var(--border);
-      border-radius: 8px; padding: 20px; margin-top: 16px;
-    }
-    .progress-wrap.visible { display: block; }
-    .progress-top {
-      display: flex; justify-content: space-between; align-items: center;
-      margin-bottom: 10px;
-    }
-    .progress-step { font-size: 13px; color: var(--cyan); font-family: var(--ff-mono); }
-    .progress-pct  { font-family: var(--ff-mono); font-size: 13px; color: var(--gold); }
-    .progress-bar-bg {
-      height: 6px; background: var(--bg2);
-      border-radius: 3px; overflow: hidden;
-    }
-    .progress-bar {
-      height: 100%;
-      background: linear-gradient(90deg, var(--gold), var(--cyan));
-      border-radius: 3px;
-      width: 0%; transition: width 0.4s ease;
-      box-shadow: 0 0 12px rgba(240,180,41,0.4);
-    }
-
-    /* ── Result ────────────────────────────────────── */
-    .result-wrap {
-      display: none; margin-top: 24px;
-    }
-    .result-wrap.visible { display: block; }
-    .result-title {
-      font-family: var(--ff-title); font-size: 16px; letter-spacing: 2px;
-      color: var(--green); margin-bottom: 14px;
-      display: flex; align-items: center; gap: 8px;
-    }
-    video.result-video {
-      width: 100%; border-radius: 8px;
-      border: 1px solid var(--border2);
-      box-shadow: 0 0 32px rgba(0,229,255,0.12);
-    }
-    img.result-image {
-      width: 100%; border-radius: 8px;
-      border: 1px solid var(--border);
-      box-shadow: 0 0 24px rgba(240,180,41,0.1);
-    }
-    .result-actions { display: flex; gap: 10px; margin-top: 14px; }
-
-    /* ── Jobs queue ────────────────────────────────── */
-    .jobs-list { display: flex; flex-direction: column; gap: 10px; }
-    .job-card {
-      display: grid; grid-template-columns: auto 1fr auto auto;
-      align-items: center; gap: 14px;
-      padding: 14px 18px;
-      background: var(--bg3); border: 1px solid var(--border);
-      border-radius: 8px; font-size: 13px;
-    }
-    .job-status-dot {
-      width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
-    }
-    .job-status-dot.pending   { background: var(--text-dim); }
-    .job-status-dot.queued    { background: var(--gold); box-shadow: 0 0 6px var(--gold); animation: pulse 1.5s infinite; }
-    .job-status-dot.processing{ background: var(--cyan); box-shadow: 0 0 6px var(--cyan); animation: pulse 1s infinite; }
-    .job-status-dot.done      { background: var(--green); box-shadow: 0 0 6px var(--green); }
-    .job-status-dot.error     { background: var(--red);   box-shadow: 0 0 6px var(--red); }
-    @keyframes pulse {
-      0%,100% { opacity: 1; } 50% { opacity: 0.4; }
-    }
-    .job-prompt { color: var(--text); font-size: 13px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
-    .job-meta   { font-family: var(--ff-mono); font-size: 10px; color: var(--text-dim); }
-    .job-action { }
-
-    /* ── About ─────────────────────────────────────── */
-    .about-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-    .about-card {
-      padding: 20px; background: var(--bg3);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-    }
-    .about-card-title {
-      font-family: var(--ff-title); font-size: 15px; letter-spacing: 2px;
-      color: var(--cyan); margin-bottom: 10px;
-    }
-    .about-card p { font-size: 13px; color: var(--text-dim); line-height: 1.7; }
-    .about-card strong { color: var(--gold); }
-
-    .specs-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-    .specs-table td { padding: 10px 14px; border-bottom: 1px solid var(--border); }
-    .specs-table td:first-child { color: var(--text-dim); font-family: var(--ff-mono); font-size: 11px; letter-spacing: 1px; }
-    .specs-table td:last-child  { color: var(--gold); font-weight: 600; }
-
-    /* ── Connection panel ──────────────────────────── */
-    .conn-panel {
-      display: flex; align-items: center; gap: 12px;
-      padding: 14px 18px;
-      background: var(--bg3); border: 1px solid var(--border);
-      border-radius: 8px; margin-bottom: 20px;
-      font-size: 12px; font-family: var(--ff-mono);
-    }
-    .conn-url { flex: 1; color: var(--text-dim); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .conn-url.active { color: var(--cyan); }
-
-    /* ── Alert ─────────────────────────────────────── */
-    .alert {
-      padding: 12px 16px; border-radius: 8px;
-      font-size: 13px; margin-bottom: 16px;
-      display: none;
-    }
-    .alert.visible { display: block; }
-    .alert.error   { background: rgba(255,58,92,0.1); border: 1px solid rgba(255,58,92,0.3); color: #ff8fa3; }
-    .alert.success { background: rgba(0,230,118,0.08); border: 1px solid rgba(0,230,118,0.25); color: var(--green); }
-    .alert.info    { background: rgba(0,229,255,0.06); border: 1px solid rgba(0,229,255,0.2); color: var(--cyan); }
-
-    /* ── Divider ───────────────────────────────────── */
-    .divider {
-      border: none; border-top: 1px solid var(--border);
-      margin: 20px 0;
-    }
-
-    /* ── Footer ────────────────────────────────────── */
-    footer {
-      position: relative; z-index: 1;
-      text-align: center;
-      padding: 32px;
-      border-top: 1px solid var(--border);
-      font-size: 12px; color: var(--text-dim);
-    }
-    footer strong { color: var(--gold); }
-    footer .footer-logo {
-      display: flex; align-items: center; justify-content: center; gap: 10px;
-      margin-bottom: 12px;
-    }
-    footer .footer-logo svg { width: 28px; height: 28px; }
-
-    /* ── Pages ─────────────────────────────────────── */
-    .page { display: none; }
-    .page.active { display: block; }
-
-    /* ── Responsive ────────────────────────────────── */
-    @media (max-width: 640px) {
-      .form-row { grid-template-columns: 1fr; }
-      .form-row.three { grid-template-columns: 1fr 1fr; }
-      .about-grid { grid-template-columns: 1fr; }
-      nav { padding: 0 16px; }
-      .main { padding: 0 16px 60px; }
+    @media(max-width:640px){
+      .form-row{grid-template-columns:1fr}
+      .form-row.three{grid-template-columns:1fr 1fr}
+      .about-grid{grid-template-columns:1fr}
+      nav{padding:0 16px}
+      .main{padding:0 16px 60px}
+      .result-actions{flex-direction:column}
     }
   </style>
 </head>
 <body>
 
-<!-- ══════ NAV ══════════════════════════════════════════════════════ -->
 <nav>
   <a class="nav-logo" href="#" onclick="showPage('generate')">
-    <!-- BENY-JOE IA Logo SVG -->
     <svg viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg">
       <defs>
         <linearGradient id="lg1" x1="0" y1="0" x2="60" y2="60" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stop-color="#f0b429"/>
-          <stop offset="100%" stop-color="#00e5ff"/>
+          <stop offset="0%" stop-color="#f0b429"/><stop offset="100%" stop-color="#00e5ff"/>
         </linearGradient>
         <filter id="glow"><feGaussianBlur stdDeviation="1.5" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
       </defs>
-      <!-- Hexagon frame -->
       <polygon points="30,3 55,17 55,43 30,57 5,43 5,17" stroke="url(#lg1)" stroke-width="2" fill="none" filter="url(#glow)"/>
-      <!-- Film frame dots -->
-      <circle cx="12" cy="22" r="2" fill="#f0b429" opacity="0.7"/>
-      <circle cx="12" cy="30" r="2" fill="#f0b429" opacity="0.7"/>
-      <circle cx="12" cy="38" r="2" fill="#f0b429" opacity="0.7"/>
-      <circle cx="48" cy="22" r="2" fill="#00e5ff" opacity="0.7"/>
-      <circle cx="48" cy="30" r="2" fill="#00e5ff" opacity="0.7"/>
-      <circle cx="48" cy="38" r="2" fill="#00e5ff" opacity="0.7"/>
-      <!-- Play triangle -->
+      <circle cx="12" cy="22" r="2" fill="#f0b429" opacity="0.7"/><circle cx="12" cy="30" r="2" fill="#f0b429" opacity="0.7"/><circle cx="12" cy="38" r="2" fill="#f0b429" opacity="0.7"/>
+      <circle cx="48" cy="22" r="2" fill="#00e5ff" opacity="0.7"/><circle cx="48" cy="30" r="2" fill="#00e5ff" opacity="0.7"/><circle cx="48" cy="38" r="2" fill="#00e5ff" opacity="0.7"/>
       <polygon points="22,19 22,41 44,30" fill="url(#lg1)" filter="url(#glow)" opacity="0.95"/>
-      <!-- BJ letters inside -->
       <text x="27" y="34" font-family="Bebas Neue,sans-serif" font-size="9" fill="#050810" text-anchor="middle" font-weight="bold">BJ</text>
     </svg>
     <div class="nav-brand">
@@ -541,14 +207,11 @@
       <span class="nav-brand-sub">By KHEDIM BENYAKHLEF</span>
     </div>
   </a>
-
   <div class="nav-spacer"></div>
-
   <div class="nav-status">
     <div class="dot" id="statusDot"></div>
     <span id="statusText">Connexion…</span>
   </div>
-
   <div class="nav-links">
     <button class="nav-link active" id="tab-generate" onclick="showPage('generate')">🎬 Générer</button>
     <button class="nav-link" id="tab-jobs"     onclick="showPage('jobs')">📋 Jobs</button>
@@ -557,9 +220,8 @@
   </div>
 </nav>
 
-<!-- ══════ HERO ══════════════════════════════════════════════════════ -->
 <div class="hero">
-  <div class="hero-badge">⚡ TPU v5 KAGGLE &nbsp;|&nbsp; FULL HD 1024×576 &nbsp;|&nbsp; ANIMATEDIFF</div>
+  <div class="hero-badge">⚡ TPU v5e KAGGLE &nbsp;|&nbsp; FULL HD 1024×576 &nbsp;|&nbsp; ANIMATEDIFF</div>
   <h1 class="hero-title">
     <span class="line1">BENY-JOE</span>
     <span class="line2">IA STUDIO</span>
@@ -569,50 +231,35 @@
     Fondée par <strong>KHEDIM BENYAKHLEF</strong> dit <strong>BENY-JOE</strong>.
   </p>
   <div class="hero-chips">
-    <span class="chip">🎬 Vidéo HD</span>
-    <span class="chip">🖼️ Image 1024px</span>
-    <span class="chip">✨ Animation IA</span>
-    <span class="chip">🎤 Voix OFF</span>
-    <span class="chip">🎵 Musique IA</span>
-    <span class="chip">⚡ TPU v5</span>
+    <span class="chip">🎬 Vidéo HD</span><span class="chip">🖼️ Image 1024px</span>
+    <span class="chip">✨ Animation IA</span><span class="chip">🎤 Voix OFF</span>
+    <span class="chip">🎵 Musique IA</span><span class="chip">⚡ TPU v5e</span>
   </div>
 </div>
 
-<!-- ══════ MAIN ══════════════════════════════════════════════════════ -->
 <div class="main">
 
-  <!-- ── PAGE GENERATE ────────────────────────────────────── -->
+  <!-- PAGE GENERATE -->
   <div class="page active" id="page-generate">
-
-    <!-- Tabs -->
     <div class="tabs">
-      <button class="tab active" id="type-video" onclick="setType('video')">
-        <span class="tab-icon">🎬</span> VIDÉO
-      </button>
-      <button class="tab" id="type-image" onclick="setType('image')">
-        <span class="tab-icon">🖼️</span> IMAGE
-      </button>
-      <button class="tab" id="type-animate" onclick="setType('animate')">
-        <span class="tab-icon">✨</span> ANIMATION
-      </button>
+      <button class="tab active" id="type-video"   onclick="setType('video')">  <span class="tab-icon">🎬</span> VIDÉO</button>
+      <button class="tab"        id="type-image"   onclick="setType('image')">  <span class="tab-icon">🖼️</span> IMAGE</button>
+      <button class="tab"        id="type-animate" onclick="setType('animate')"><span class="tab-icon">✨</span> ANIMATION</button>
     </div>
 
-    <!-- Alert -->
     <div class="alert info visible" id="alertKaggle">
-      ⚡ Assurez-vous que votre notebook Kaggle est actif et que la Cellule 4 tourne. La connexion sera détectée automatiquement.
+      ⚡ Assurez-vous que votre notebook Kaggle est actif et que la Cellule 4 tourne.
     </div>
     <div class="alert error" id="alertError"></div>
 
-    <!-- Prompt card -->
     <div class="card">
       <div class="card-title">✍️ PROMPT DE GÉNÉRATION</div>
-
       <div class="form-row full">
         <label for="prompt">Description du contenu à générer</label>
-        <textarea id="prompt" rows="4" placeholder="Ex : Un coucher de soleil épique sur le Sahara algérien, lumière dorée, caméra en mouvement lent, qualité cinématographique 4K…"></textarea>
+        <textarea id="prompt" rows="4" placeholder="Ex : Un coucher de soleil épique sur le Sahara algérien, lumière dorée, caméra en mouvement lent, qualité cinématographique…"></textarea>
       </div>
 
-      <!-- Video params -->
+      <!-- VIDEO PARAMS -->
       <div id="params-video">
         <div class="form-row three">
           <div>
@@ -635,33 +282,20 @@
             <select id="fps">
               <option value="24">24 fps — Cinéma</option>
               <option value="30">30 fps — Web</option>
+              <option value="8">8 fps — Rapide</option>
             </select>
           </div>
         </div>
-
         <div class="form-row">
           <div class="toggle-row">
-            <div class="toggle-label">
-              🎤 Voix OFF (gTTS)
-              <span>Narration automatique FR/EN/AR</span>
-            </div>
-            <label class="toggle-switch">
-              <input type="checkbox" id="voice" checked/>
-              <span class="toggle-track"></span>
-            </label>
+            <div class="toggle-label">🎤 Voix OFF (gTTS)<span>Narration automatique FR/EN/AR</span></div>
+            <label class="toggle-switch"><input type="checkbox" id="voice" checked/><span class="toggle-track"></span></label>
           </div>
           <div class="toggle-row">
-            <div class="toggle-label">
-              🎵 Musique IA (MusicGen)
-              <span>Composition musicale generative</span>
-            </div>
-            <label class="toggle-switch">
-              <input type="checkbox" id="music" checked/>
-              <span class="toggle-track"></span>
-            </label>
+            <div class="toggle-label">🎵 Musique IA (MusicGen)<span>Composition musicale generative</span></div>
+            <label class="toggle-switch"><input type="checkbox" id="music" checked/><span class="toggle-track"></span></label>
           </div>
         </div>
-
         <div class="form-row" id="audio-options">
           <div>
             <label>Langue voix</label>
@@ -679,12 +313,14 @@
               <option value="ambient">🌊 Ambient</option>
               <option value="epic">⚔️ Épique</option>
               <option value="oriental">🌙 Oriental</option>
+              <option value="jazz">🎷 Jazz</option>
+              <option value="nature">🌿 Nature</option>
             </select>
           </div>
         </div>
       </div>
 
-      <!-- Image params -->
+      <!-- IMAGE PARAMS -->
       <div id="params-image" style="display:none">
         <div class="form-row">
           <div>
@@ -705,11 +341,9 @@
         </div>
       </div>
 
-      <!-- Animate params -->
+      <!-- ANIMATE PARAMS -->
       <div id="params-animate" style="display:none">
-        <div class="alert info visible">
-          Uploadez une image de base, l'IA génère une animation fluide à partir de celle-ci.
-        </div>
+        <div class="alert info visible">Uploadez une image de base, l'IA génère une animation fluide.</div>
         <div class="form-row full">
           <label>Image source (optionnel)</label>
           <input type="file" id="base-image" accept="image/*" style="padding:10px"/>
@@ -739,29 +373,45 @@
       </button>
     </div>
 
-    <!-- Progress -->
+    <!-- PROGRESS -->
     <div class="progress-wrap" id="progressWrap">
       <div class="progress-top">
         <span class="progress-step" id="progressStep">Initialisation…</span>
-        <span class="progress-pct" id="progressPct">0%</span>
+        <span class="progress-pct"  id="progressPct">0%</span>
       </div>
       <div class="progress-bar-bg"><div class="progress-bar" id="progressBar"></div></div>
     </div>
 
-    <!-- Result -->
+    <!-- RESULT ✅ player vidéo complet avec tous les contrôles -->
     <div class="result-wrap" id="resultWrap">
       <div class="result-title">✅ GÉNÉRATION TERMINÉE</div>
-      <video class="result-video" id="resultVideo" controls style="display:none"></video>
-      <img  class="result-image" id="resultImage"          style="display:none" alt="Résultat"/>
+
+      <!-- Player vidéo avec contrôles natifs complets -->
+      <div class="video-container" id="videoContainer" style="display:none">
+        <video class="result-video" id="resultVideo"
+               controls controlsList="nodownload"
+               preload="metadata" playsinline>
+          Votre navigateur ne supporte pas la lecture vidéo HTML5.
+        </video>
+      </div>
+
+      <img class="result-image" id="resultImage" style="display:none" alt="Résultat IA"/>
+
+      <div class="result-meta" id="resultMeta" style="display:none"></div>
+
       <div class="result-actions">
-        <a id="downloadBtn" class="btn btn-outline" download>⬇ Télécharger</a>
+        <a id="downloadBtn" class="btn btn-primary" download>
+          ⬇ TÉLÉCHARGER MP4
+        </a>
+        <button class="btn btn-outline" id="fullscreenBtn" onclick="toggleFullscreen()" style="display:none">
+          ⛶ Plein écran
+        </button>
         <button class="btn btn-outline" onclick="resetForm()">🔄 Nouveau</button>
       </div>
     </div>
+  </div>
 
-  </div><!-- /page-generate -->
-
-  <!-- ── PAGE JOBS ─────────────────────────────────────────── -->
+  <!-- PAGE JOBS -->
   <div class="page" id="page-jobs">
     <div class="card">
       <div class="card-title" style="justify-content:space-between">
@@ -774,119 +424,88 @@
     </div>
   </div>
 
-  <!-- ── PAGE CONNECT ──────────────────────────────────────── -->
+  <!-- PAGE CONNECT -->
   <div class="page" id="page-connect">
     <div class="card">
       <div class="card-title">⚙️ CONNEXION KAGGLE ↔ PLATEFORME</div>
-
       <div class="conn-panel">
         <div class="dot" id="connDot"></div>
         <span class="conn-url" id="connUrl">Non connecté</span>
       </div>
-
       <p style="font-size:13px;color:var(--text-dim);margin-bottom:20px;line-height:1.7">
         La connexion est établie automatiquement lorsque le notebook Kaggle tourne.<br/>
-        Le notebook envoie son URL ngrok à cette plateforme via la <strong style="color:var(--gold)">Cellule 5</strong>.
+        Le notebook envoie son URL ngrok via la <strong style="color:var(--gold)">Cellule 5</strong>.
       </p>
-
       <div class="form-row full">
         <label>URL Render (à copier dans le notebook)</label>
         <div style="display:flex;gap:10px">
-          <input type="text" id="renderUrl" value="" readonly placeholder="https://benyjoe-ia.onrender.com"/>
+          <input type="text" id="renderUrl" value="" readonly/>
           <button class="btn btn-outline" style="white-space:nowrap;padding:12px 20px" onclick="copyRenderUrl()">📋 Copier</button>
         </div>
       </div>
-
       <hr class="divider"/>
-
       <div class="card-title" style="font-size:15px;margin-bottom:14px">📖 INSTRUCTIONS</div>
-
       <ol style="font-size:13px;color:var(--text-dim);line-height:2;padding-left:20px">
-        <li>Déployez cette plateforme sur <strong style="color:var(--gold)">Render</strong></li>
-        <li>Copiez l'URL Render ci-dessus</li>
-        <li>Dans le notebook, Cellule 5, collez l'URL dans <code style="color:var(--cyan);font-family:var(--ff-mono)">RENDER_URL</code></li>
-        <li>Exécutez les cellules du notebook dans l'ordre (0 → 5)</li>
+        <li>Déployez sur <strong style="color:var(--gold)">Render</strong> — URL auto-détectée</li>
+        <li>Dans le notebook Kaggle, copiez l'URL dans <code style="color:var(--cyan);font-family:var(--ff-mono)">RENDER_URL</code></li>
+        <li>Exécutez les cellules du notebook dans l'ordre (0 → 6)</li>
         <li>La connexion s'établit automatiquement ✅</li>
       </ol>
     </div>
-
     <div class="card">
-      <div class="card-title" style="font-size:15px">🔑 CONFIGURATION SECRETS KAGGLE</div>
+      <div class="card-title" style="font-size:15px">🔑 SECRETS KAGGLE REQUIS</div>
       <table class="specs-table">
         <tr><td>GITHUB_TOKEN</td><td>Token GitHub pour push vidéos</td></tr>
         <tr><td>NGROK_TOKEN</td><td>Token ngrok pour tunnel public</td></tr>
+        <tr><td>GITHUB_REPO</td><td>username/repo pour stocker les vidéos</td></tr>
+        <tr><td>BENYJOE_SECRET</td><td>Clé partagée avec Render</td></tr>
       </table>
     </div>
   </div>
 
-  <!-- ── PAGE ABOUT ────────────────────────────────────────── -->
+  <!-- PAGE ABOUT -->
   <div class="page" id="page-about">
     <div class="card" style="text-align:center;padding:40px">
       <svg viewBox="0 0 120 120" width="90" height="90" style="margin:0 auto 20px" xmlns="http://www.w3.org/2000/svg">
         <defs>
           <linearGradient id="alg" x1="0" y1="0" x2="120" y2="120" gradientUnits="userSpaceOnUse">
-            <stop offset="0%" stop-color="#f0b429"/>
-            <stop offset="100%" stop-color="#00e5ff"/>
+            <stop offset="0%" stop-color="#f0b429"/><stop offset="100%" stop-color="#00e5ff"/>
           </linearGradient>
           <filter id="aglow"><feGaussianBlur stdDeviation="2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
         </defs>
         <polygon points="60,6 110,34 110,86 60,114 10,86 10,34" stroke="url(#alg)" stroke-width="3" fill="none" filter="url(#aglow)"/>
         <polygon points="60,18 98,40 98,80 60,102 22,80 22,40" stroke="url(#alg)" stroke-width="1.5" fill="none" opacity="0.4"/>
-        <circle cx="24" cy="44" r="3.5" fill="#f0b429" opacity="0.8"/>
-        <circle cx="24" cy="60" r="3.5" fill="#f0b429" opacity="0.8"/>
-        <circle cx="24" cy="76" r="3.5" fill="#f0b429" opacity="0.8"/>
-        <circle cx="96" cy="44" r="3.5" fill="#00e5ff" opacity="0.8"/>
-        <circle cx="96" cy="60" r="3.5" fill="#00e5ff" opacity="0.8"/>
-        <circle cx="96" cy="76" r="3.5" fill="#00e5ff" opacity="0.8"/>
         <polygon points="42,38 42,82 88,60" fill="url(#alg)" filter="url(#aglow)"/>
         <text x="60" y="66" font-family="Bebas Neue,sans-serif" font-size="16" fill="#050810" text-anchor="middle" font-weight="bold">BJ</text>
       </svg>
       <h2 style="font-family:var(--ff-title);font-size:32px;letter-spacing:4px;color:var(--gold);text-shadow:var(--glow-g)">BENY-JOE IA</h2>
       <p style="font-family:var(--ff-mono);font-size:11px;letter-spacing:4px;color:var(--cyan-dim);margin:8px 0 16px">PLATEFORME DE GÉNÉRATION IA</p>
-      <p style="font-size:14px;color:var(--text-dim)">
-        Fondée par <strong style="color:var(--gold);font-size:15px">KHEDIM BENYAKHLEF</strong><br/>
-        dit <strong style="color:var(--cyan)">BENY-JOE</strong>
-      </p>
+      <p style="font-size:14px;color:var(--text-dim)">Fondée par <strong style="color:var(--gold);font-size:15px">KHEDIM BENYAKHLEF</strong><br/>dit <strong style="color:var(--cyan)">BENY-JOE</strong></p>
     </div>
-
     <div class="about-grid">
-      <div class="about-card">
-        <div class="about-card-title">⚡ MOTEUR IA</div>
-        <p><strong>AnimateDiff</strong> sur <strong>Stable Diffusion 1.5</strong>, accéléré par <strong>TPU v5e Kaggle</strong>. Résolution <strong>1024×576 Full HD</strong>, 24fps cinéma.</p>
-      </div>
-      <div class="about-card">
-        <div class="about-card-title">🎤 AUDIO IA</div>
-        <p>Voix OFF multilingue via <strong>gTTS</strong> (FR/EN/AR). Musique générée par <strong>MusicGen-medium</strong> de Meta selon le style choisi.</p>
-      </div>
-      <div class="about-card">
-        <div class="about-card-title">🌐 ARCHITECTURE</div>
-        <p>Notebook <strong>Kaggle TPU</strong> → Tunnel <strong>ngrok</strong> → Backend <strong>Flask / Render</strong> → Frontend <strong>HTML5</strong>. Watcher automatique des vidéos générées.</p>
-      </div>
-      <div class="about-card">
-        <div class="about-card-title">📦 STACK TECHNIQUE</div>
-        <p><strong>Python 3.12</strong> · <strong>PyTorch</strong> · <strong>JAX</strong> · <strong>diffusers 0.28</strong> · <strong>moviepy</strong> · <strong>Flask</strong> · <strong>pyngrok</strong> · <strong>audiocraft</strong></p>
-      </div>
+      <div class="about-card"><div class="about-card-title">⚡ MOTEUR IA</div><p><strong>AnimateDiff</strong> sur <strong>Stable Diffusion 1.5</strong>, accéléré par <strong>TPU v5e Kaggle</strong>.</p></div>
+      <div class="about-card"><div class="about-card-title">🎤 AUDIO IA</div><p>Voix OFF via <strong>gTTS</strong> (FR/EN/AR). Musique par <strong>MusicGen</strong> (Meta).</p></div>
+      <div class="about-card"><div class="about-card-title">🌐 ARCHITECTURE</div><p><strong>Kaggle TPU</strong> → <strong>ngrok</strong> → <strong>Flask/Render</strong> → <strong>HTML5</strong>.</p></div>
+      <div class="about-card"><div class="about-card-title">♾️ KEEP-ALIVE</div><p>Auto-ping Render toutes les <strong>14 minutes</strong> pour éviter le spin-down gratuit.</p></div>
     </div>
-
     <div class="card" style="margin-top:20px">
-      <div class="card-title">📊 SPÉCIFICATIONS TECHNIQUES</div>
+      <div class="card-title">📊 SPÉCIFICATIONS</div>
       <table class="specs-table">
-        <tr><td>RÉSOLUTION VIDÉO</td><td>1024×576 Full HD 16:9</td></tr>
-        <tr><td>FPS</td><td>24 (cinéma) / 30 (web)</td></tr>
+        <tr><td>RÉSOLUTION</td><td>1024×576 Full HD 16:9</td></tr>
+        <tr><td>FPS</td><td>8 / 24 / 30</td></tr>
         <tr><td>DURÉE MAX</td><td>60 secondes</td></tr>
         <tr><td>MODÈLE VIDÉO</td><td>AnimateDiff v3 + SD 1.5</td></tr>
-        <tr><td>MODÈLE IMAGE</td><td>Stable Diffusion 1.5</td></tr>
         <tr><td>VOIX</td><td>gTTS FR / EN / AR</td></tr>
-        <tr><td>MUSIQUE</td><td>MusicGen-medium (Meta)</td></tr>
-        <tr><td>ACCÉLÉRATEUR</td><td>TPU v5e — Kaggle</td></tr>
-        <tr><td>FORMAT SORTIE</td><td>MP4 H.264 / PNG / WebM</td></tr>
+        <tr><td>MUSIQUE</td><td>MusicGen-small (Meta)</td></tr>
+        <tr><td>ACCÉLÉRATEUR</td><td>TPU v5e-8 — Kaggle</td></tr>
+        <tr><td>FORMAT SORTIE</td><td>MP4 H.264 + AAC</td></tr>
+        <tr><td>KEEP-ALIVE</td><td>Auto-ping toutes les 14min ♾️</td></tr>
       </table>
     </div>
   </div>
 
 </div><!-- /main -->
 
-<!-- ══════ FOOTER ════════════════════════════════════════════════════ -->
 <footer>
   <div class="footer-logo">
     <svg viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -900,24 +519,22 @@
 </footer>
 
 <script>
-/* ════════════════════════════════════════════════════════════════════
-   BENY-JOE IA — Frontend JS
-═══════════════════════════════════════════════════════════════════ */
+/* ════════════════════════════════════════════════════════
+   BENY-JOE IA — Frontend JS  ✅ CORRIGÉ COMPLET
+═══════════════════════════════════════════════════════ */
 
-// ── Config ──────────────────────────────────────────────────────────
-const API = window.location.origin;   // même domaine
-let currentType = 'video';
+const API = window.location.origin;
+let currentType  = 'video';
 let currentJobId = null;
-let pollTimer = null;
+let pollTimer    = null;
 
-// ── Init ────────────────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', () => {
   document.getElementById('renderUrl').value = window.location.origin;
   checkStatus();
   setInterval(checkStatus, 10000);
 });
 
-// ── Navigation ───────────────────────────────────────────────────────
+// ── Navigation ────────────────────────────────────────
 function showPage(name) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-link').forEach(b => b.classList.remove('active'));
@@ -926,7 +543,6 @@ function showPage(name) {
   if (name === 'jobs') loadJobs();
 }
 
-// ── Type tabs ────────────────────────────────────────────────────────
 function setType(t) {
   currentType = t;
   ['video','image','animate'].forEach(x => {
@@ -935,30 +551,27 @@ function setType(t) {
   });
 }
 
-// ── Status check ─────────────────────────────────────────────────────
+// ── Status ────────────────────────────────────────────
+// ✅ FIX : appelle /api/health (plus /api/connexion qui ne contenait pas kaggle_ready)
 async function checkStatus() {
   try {
     const r = await fetch(API+'/api/health');
     const d = await r.json();
-    const ok = d.kaggle_ready;
-    const dot  = document.getElementById('statusDot');
-    const txt  = document.getElementById('statusText');
-    const connDot = document.getElementById('connDot');
-    const connUrl = document.getElementById('connUrl');
+    const ok = d.kaggle_ready || d.kaggle_connected || false;
 
-    dot.className  = 'dot '+(ok?'online':'offline');
-    txt.textContent = ok ? 'Kaggle TPU connecté' : 'Kaggle non connecté';
-    connDot.className = 'dot '+(ok?'online':'offline');
-    connUrl.textContent = d.kaggle_url || 'Non connecté';
-    connUrl.className = 'conn-url'+(ok?' active':'');
+    document.getElementById('statusDot').className   = 'dot '+(ok?'online':'offline');
+    document.getElementById('statusText').textContent = ok ? `⚡ ${d.device||'Kaggle'} connecté` : 'Kaggle non connecté';
+    document.getElementById('connDot').className     = 'dot '+(ok?'online':'offline');
+    document.getElementById('connUrl').textContent   = d.kaggle_url || 'Non connecté';
+    document.getElementById('connUrl').className     = 'conn-url'+(ok?' active':'');
 
-    const alertKaggle = document.getElementById('alertKaggle');
-    if (ok) alertKaggle.classList.remove('visible');
-    else    alertKaggle.classList.add('visible');
+    const alertK = document.getElementById('alertKaggle');
+    if (ok) alertK.classList.remove('visible');
+    else    alertK.classList.add('visible');
   } catch(e) {}
 }
 
-// ── Generate ─────────────────────────────────────────────────────────
+// ── Génération ────────────────────────────────────────
 async function startGeneration() {
   const prompt = document.getElementById('prompt').value.trim();
   if (!prompt) { showAlert('error', '⚠️ Veuillez entrer une description (prompt).'); return; }
@@ -966,40 +579,36 @@ async function startGeneration() {
   hideAlert('error');
   const btn = document.getElementById('generateBtn');
   btn.disabled = true;
-  btn.textContent = '⏳ Envoi en cours…';
+  btn.innerHTML = '⏳ ENVOI EN COURS…';
 
   const body = {
     prompt,
-    type:       currentType,
-    resolution: document.getElementById('resolution')?.value || '1024x576',
-    duration:   document.getElementById('duration')?.value   || 10,
-    fps:        document.getElementById('fps')?.value        || 24,
-    voice:      document.getElementById('voice')?.checked    ?? true,
-    music:      document.getElementById('music')?.checked    ?? true,
-    voice_lang: document.getElementById('voice_lang')?.value || 'fr',
-    music_style:document.getElementById('music_style')?.value|| 'cinematic',
-    frames:     document.getElementById('frames')?.value     || 32,
+    type:        currentType === 'animate' ? 'animation' : currentType,
+    resolution:  document.getElementById('resolution')?.value   || '1024x576',
+    duration:    document.getElementById('duration')?.value     || 10,
+    fps:         document.getElementById('fps')?.value          || 8,
+    voice:       document.getElementById('voice')?.checked      ?? true,
+    music:       document.getElementById('music')?.checked      ?? true,
+    voice_lang:  document.getElementById('voice_lang')?.value   || 'fr',
+    music_style: document.getElementById('music_style')?.value  || 'cinematic',
+    frames:      document.getElementById('frames')?.value       || 32,
   };
 
   try {
     const r = await fetch(API+'/api/generate', {
-      method: 'POST',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify(body),
+      method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)
     });
     const d = await r.json();
-    if (d.error) { showAlert('error', '❌ '+d.error); btn.disabled=false; btn.textContent='⚡ LANCER LA GÉNÉRATION'; return; }
-
+    if (d.error) { showAlert('error', '❌ '+d.error); resetBtn(); return; }
     currentJobId = d.job_id;
     showProgress(true);
     startPoll(d.job_id);
   } catch(e) {
-    showAlert('error', '❌ Erreur réseau : '+e.message);
-    btn.disabled=false; btn.textContent='⚡ LANCER LA GÉNÉRATION';
+    showAlert('error', '❌ Erreur réseau : '+e.message); resetBtn();
   }
 }
 
-// ── Poll job ─────────────────────────────────────────────────────────
+// ── Polling ───────────────────────────────────────────
 function startPoll(jid) {
   if (pollTimer) clearInterval(pollTimer);
   pollTimer = setInterval(() => pollJob(jid), 2500);
@@ -1007,95 +616,177 @@ function startPoll(jid) {
 
 async function pollJob(jid) {
   try {
-    const r = await fetch(API+'/api/jobs/'+jid);
+    const r   = await fetch(API+'/api/jobs/'+jid);
     const job = await r.json();
     updateProgress(job.progress||0, job.step||'Traitement…');
     if (job.status === 'done') {
       clearInterval(pollTimer);
-      showResult(job.result, currentType);
+      showResult(job);
     } else if (job.status === 'error') {
       clearInterval(pollTimer);
-      showAlert('error', '❌ Erreur : '+job.error);
-      resetBtn();
+      showAlert('error', '❌ Erreur : '+(job.error||'inconnue'));
+      resetBtn(); showProgress(false);
     }
   } catch(e) {}
 }
 
-// ── UI helpers ────────────────────────────────────────────────────────
+// ── Progress UI ───────────────────────────────────────
 function showProgress(v) {
   document.getElementById('progressWrap').classList.toggle('visible', v);
 }
 function updateProgress(pct, step) {
   document.getElementById('progressBar').style.width = pct+'%';
-  document.getElementById('progressPct').textContent = pct+'%';
+  document.getElementById('progressPct').textContent  = pct+'%';
   document.getElementById('progressStep').textContent = step;
 }
-function showResult(url, type) {
-  const wrap  = document.getElementById('resultWrap');
-  const vid   = document.getElementById('resultVideo');
-  const img   = document.getElementById('resultImage');
-  const dlBtn = document.getElementById('downloadBtn');
 
-  vid.style.display = 'none';
-  img.style.display = 'none';
+// ── Résultat ✅ CORRIGÉ — player vidéo avec stream_url ──
+function showResult(job) {
+  const wrap      = document.getElementById('resultWrap');
+  const vidWrap   = document.getElementById('videoContainer');
+  const vid       = document.getElementById('resultVideo');
+  const img       = document.getElementById('resultImage');
+  const dlBtn     = document.getElementById('downloadBtn');
+  const metaDiv   = document.getElementById('resultMeta');
+  const fsBtn     = document.getElementById('fullscreenBtn');
 
-  if (type === 'image') {
-    img.src = url; img.style.display = 'block';
+  vid.pause();
+  vidWrap.style.display = 'none';
+  img.style.display     = 'none';
+  metaDiv.style.display = 'none';
+  fsBtn.style.display   = 'none';
+
+  const isImage   = (job.type === 'image');
+
+  // ✅ URL pour le player : stream_url en priorité (pas de CORS/MIME issues)
+  // Fallback : download_url, puis result brut
+  const streamUrl  = job.stream_url   || null;
+  const dlUrl      = job.download_url || (job.result ? `/api/download?url=${encodeURIComponent(job.result)}&type=${job.type||'video'}` : '');
+  const rawUrl     = job.video_url || job.result || '';
+
+  if (isImage) {
+    img.src           = rawUrl;
+    img.style.display = 'block';
+    dlBtn.href        = rawUrl;
+    dlBtn.download    = 'benyjoe-image.png';
+    dlBtn.textContent = '⬇ TÉLÉCHARGER PNG';
   } else {
-    vid.src = url; vid.style.display = 'block';
+    // ✅ Player vidéo avec source stream
+    if (streamUrl) {
+      vid.src = streamUrl;  // /api/stream/<jid> — bon Content-Type + Range support
+    } else if (rawUrl) {
+      vid.src = rawUrl;
+    }
+    vid.load();
+    vidWrap.style.display = 'block';
+    fsBtn.style.display   = 'inline-flex';
+
+    // Bouton téléchargement
+    dlBtn.href     = dlUrl || rawUrl;
+    dlBtn.download = 'benyjoe-video.mp4';
+    dlBtn.innerHTML = '⬇ TÉLÉCHARGER MP4';
+
+    // Métadonnées
+    if (job.id || job.step) {
+      metaDiv.textContent  = `🎬 Job : ${job.id||'?'} · ${job.step||'Terminé'} · ${job.type||'video'} · ${job.progress||100}%`;
+      metaDiv.style.display = 'block';
+    }
   }
-  const ext2 = type === 'image' ? 'png' : 'mp4';
-  dlBtn.href = API + '/api/download?url=' + encodeURIComponent(url) + '&type=' + type;
-  dlBtn.download = 'benyjoe-ia-result.'+(type==='image'?'png':'mp4');
+
   wrap.classList.add('visible');
   showProgress(false);
   resetBtn();
+
+  // Auto-play si la vidéo est prête
+  if (!isImage) {
+    vid.addEventListener('canplay', () => vid.play().catch(()=>{}), { once: true });
+  }
 }
+
+// ── Plein écran ───────────────────────────────────────
+function toggleFullscreen() {
+  const vid = document.getElementById('resultVideo');
+  if (vid.requestFullscreen)       vid.requestFullscreen();
+  else if (vid.webkitRequestFullscreen) vid.webkitRequestFullscreen();
+}
+
+// ── Reset ─────────────────────────────────────────────
 function resetBtn() {
   const btn = document.getElementById('generateBtn');
-  btn.disabled=false; btn.textContent='⚡ LANCER LA GÉNÉRATION';
+  btn.disabled = false;
+  btn.innerHTML = '⚡ LANCER LA GÉNÉRATION';
 }
 function resetForm() {
+  const vid = document.getElementById('resultVideo');
+  vid.pause(); vid.src = '';
   document.getElementById('resultWrap').classList.remove('visible');
   document.getElementById('progressWrap').classList.remove('visible');
   document.getElementById('prompt').value = '';
+  currentJobId = null;
 }
+
+// ── Alerts ────────────────────────────────────────────
 function showAlert(type, msg) {
   const el = document.getElementById('alert'+type.charAt(0).toUpperCase()+type.slice(1));
-  if (!el) { const e2=document.getElementById('alertError'); e2.textContent=msg; e2.classList.add('visible'); return; }
-  el.textContent = msg; el.classList.add('visible');
+  if (el) { el.textContent = msg; el.classList.add('visible'); }
 }
 function hideAlert(type) {
   const el = document.getElementById('alert'+type.charAt(0).toUpperCase()+type.slice(1));
   if (el) el.classList.remove('visible');
 }
 
-// ── Jobs list ─────────────────────────────────────────────────────────
+// ── Jobs list ─────────────────────────────────────────
 async function loadJobs() {
   try {
     const r = await fetch(API+'/api/jobs');
     const d = await r.json();
     const list = document.getElementById('jobsList');
-    const jobs = Object.values(d.jobs||{}).reverse();
-    if (!jobs.length) { list.innerHTML='<p style="color:var(--text-dim);text-align:center;padding:32px;font-family:var(--ff-mono);font-size:13px">Aucun job pour l\'instant</p>'; return; }
+    const jobs = (d.jobs||[]).slice().reverse();
+    if (!jobs.length) {
+      list.innerHTML = '<p style="color:var(--text-dim);text-align:center;padding:32px;font-family:var(--ff-mono);font-size:13px">Aucun job pour l\'instant</p>';
+      return;
+    }
     list.innerHTML = jobs.map(j => `
       <div class="job-card">
         <div class="job-status-dot ${j.status}"></div>
         <div>
           <div class="job-prompt">${j.prompt||'(sans prompt)'}</div>
-          <div class="job-meta">${j.id} · ${j.type} · ${j.status} · ${j.progress||0}%</div>
+          <div class="job-meta">${j.id} · ${j.type||'video'} · ${j.status} · ${j.progress||0}%</div>
         </div>
-        <span class="job-meta">${(j.created_at||'').slice(11,19)}</span>
-        ${j.result ? `<a href="${j.result}" target="_blank" class="btn btn-outline" style="padding:6px 12px;font-size:11px">▶ Voir</a>` : ''}
+        <span class="job-meta">${(j.created||'').slice(11,19)}</span>
+        ${j.stream_url
+          ? `<button onclick="playJobVideo('${j.id}','${j.stream_url}','${j.download_url||''}')" class="btn btn-outline" style="padding:6px 12px;font-size:11px">▶ Lire</button>`
+          : j.result
+          ? `<a href="/api/download?url=${encodeURIComponent(j.result)}&type=video" class="btn btn-outline" style="padding:6px 12px;font-size:11px" download>⬇ DL</a>`
+          : ''}
       </div>
     `).join('');
   } catch(e) {}
 }
 
-// ── Copy URL ─────────────────────────────────────────────────────────
+function playJobVideo(jid, streamUrl, dlUrl) {
+  showPage('generate');
+  const vidWrap = document.getElementById('videoContainer');
+  const vid     = document.getElementById('resultVideo');
+  const dlBtn   = document.getElementById('downloadBtn');
+  const wrap    = document.getElementById('resultWrap');
+
+  document.getElementById('resultImage').style.display = 'none';
+  vid.src = streamUrl;
+  vid.load();
+  vidWrap.style.display = 'block';
+  document.getElementById('fullscreenBtn').style.display = 'inline-flex';
+  dlBtn.href     = dlUrl || `/api/download?url=${streamUrl}&type=video`;
+  dlBtn.download = 'benyjoe-video.mp4';
+  dlBtn.innerHTML = '⬇ TÉLÉCHARGER MP4';
+  wrap.classList.add('visible');
+  vid.play().catch(()=>{});
+}
+
+// ── Copy URL ──────────────────────────────────────────
 function copyRenderUrl() {
   navigator.clipboard.writeText(document.getElementById('renderUrl').value)
-    .then(()=>{ showAlert('success','✅ URL copiée dans le presse-papier'); setTimeout(()=>document.getElementById('alertError').classList.remove('visible'),3000); })
+    .then(()=>{ showAlert('success','✅ URL copiée !'); setTimeout(()=>hideAlert('success'),3000); })
     .catch(()=>{});
 }
 </script>
