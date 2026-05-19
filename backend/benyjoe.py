@@ -422,7 +422,6 @@ def api_tunnel():
 # ════════════════════════════════════════════════════════════════════════
 
 @app.route('/', methods=['GET'])
-@login_required
 def index():
     return send_from_directory(str(FRONTEND_DIR), 'index.html')
 
