@@ -35,7 +35,6 @@ google_bp = make_google_blueprint(
     client_secret=os.environ.get('GOOGLE_CLIENT_SECRET'),
     scope=['openid','https://www.googleapis.com/auth/userinfo.email','https://www.googleapis.com/auth/userinfo.profile'],
     redirect_url='/auth/google/authorized',
-    prompt='select_account',
 )
 app.secret_key = os.environ.get('SECRET_KEY', os.environ.get('BENYJOE_SECRET','benyjoe-secret-2025'))
 app.register_blueprint(google_bp, url_prefix='/auth')
