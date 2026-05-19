@@ -25,6 +25,35 @@ FRONTEND_DIR = BASE_DIR.parent / 'frontend' / 'public'
 app = Flask(__name__, static_folder=str(FRONTEND_DIR))
 CORS(app)
 
+# GOOGLE AUTH
+from flask_dance.contrib.google import make_google_blueprint, google
+from functools import wraps
+os.environ.setdefault('OAUTHLIB_RELAX_TOKEN_SCOPE', '1')
+os.environ.setdefault('OAUTHLIB_INSECURE_TRANSPORT', '0')
+google_bp = make_google_blueprint(
+    client_id=os.environ.get('GOOGLE_CLIENT_ID'),
+    client_secret=os.environ.get('GOOGLE_CLIENT_SECRET'),
+    scope=['openid','https://www.googleapis.com/auth/userinfo.email','https://www.googleapis.com/auth/userinfo.profile'],
+    redirect_url='/auth/google/authorized',
+)
+app.secret_key = os.environ.get('SECRET_KEY', os.environ.get('BENYJOE_SECRET','benyjoe-secret-2025'))
+app.register_blueprint(google_bp, url_prefix='/auth')
+ALLOWED_EMAIL = os.environ.get('ALLOWED_EMAIL','khedimbenyakhlef@gmail.com')
+def login_required(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        if not google.authorized:
+            return '<html><body style="text-align:center;margin-top:100px"><h2>BENY-JOE IA</h2><br><a href="/auth/google/login" style="padding:12px 24px;background:#4285F4;color:white;border-radius:6px;text-decoration:none">Se connecter avec Google</a></body></html>'
+        info = google.get('/oauth2/v2/userinfo')
+        if not info.ok:
+            return '<h3>Erreur Auth</h3>', 500
+        email = info.json().get('email','')
+        if email != ALLOWED_EMAIL:
+            return f'<h3>Acces refuse : {email}</h3>', 403
+        return f(*args, **kwargs)
+    return decorated
+
+
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger('BENYJOE-RENDER')
 
@@ -422,6 +451,7 @@ def api_tunnel():
 # ════════════════════════════════════════════════════════════════════════
 
 @app.route('/', methods=['GET'])
+@login_required
 def index():
     return send_from_directory(str(FRONTEND_DIR), 'index.html')
 
