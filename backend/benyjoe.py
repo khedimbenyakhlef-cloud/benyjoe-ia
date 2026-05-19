@@ -469,39 +469,3 @@ if __name__ == '__main__':
     log.info(f'🚀 {PLATFORM_NAME} — port {PORT}')
     app.run(host='0.0.0.0', port=PORT, debug=False)
 
-
-# ════════════════════════════════════════════════════════════════════════
-#  GOOGLE AUTH
-# ════════════════════════════════════════════════════════════════════════
-from flask_dance.contrib.google import make_google_blueprint, google
-from functools import wraps
-os.environ.setdefault('OAUTHLIB_RELAX_TOKEN_SCOPE', '1')
-os.environ.setdefault('OAUTHLIB_INSECURE_TRANSPORT', '0')
-google_bp = make_google_blueprint(
-    client_id=os.environ.get('GOOGLE_CLIENT_ID'),
-    client_secret=os.environ.get('GOOGLE_CLIENT_SECRET'),
-    scope=['openid','https://www.googleapis.com/auth/userinfo.email','https://www.googleapis.com/auth/userinfo.profile'],
-    redirect_url='/auth/google/authorized',
-)
-app.secret_key = os.environ.get('SECRET_KEY', os.environ.get('BENYJOE_SECRET','benyjoe-secret-2025'))
-app.register_blueprint(google_bp, url_prefix='/auth')
-ALLOWED_EMAIL = os.environ.get('ALLOWED_EMAIL','khedimbenyakhlef@gmail.com')
-def login_required(f):
-    @wraps(f)
-    def decorated(*args, **kwargs):
-        if not google.authorized:
-            return '<html><body style="text-align:center;margin-top:100px"><h2>BENY-JOE IA</h2><a href="/auth/google/login" style="padding:12px 24px;background:#4285F4;color:white;border-radius:6px;text-decoration:none">Se connecter avec Google</a></body></html>'
-        info = google.get('/oauth2/v2/userinfo')
-        if not info.ok:
-            return '<h3>Erreur Auth</h3>', 500
-        email = info.json().get('email','')
-        if email != ALLOWED_EMAIL:
-            return f'<h3>Acces refuse : {email}</h3>', 403
-        return f(*args, **kwargs)
-    return decorated
-@app.route('/me')
-def me():
-    if not google.authorized:
-        return jsonify({'connected': False})
-    info = google.get('/oauth2/v2/userinfo')
-    return jsonify(info.json() if info.ok else {'error': 'Auth error'})
